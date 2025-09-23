@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,800');
+
+:root{
+	--main: #F2F2F2;
+	--light: #fff;
+	--input-form: rgb(243, 243, 243);
+	--text: #222222;
+	--input-form-box-shadow: 0 0 0 0.2rem rgb(240, 240, 240);
+ 
+}
+
+html,body {
+	height: 100%;
+}
+
+/* RECAPTCHA
+.grecaptcha-badge { 
+    visibility: hidden;
+} */
+
+.swal-text{
+	text-align: center;
+}
+
+footer{
+	text-align: center;
+	padding-top: 15px;
+	font-size: 9px;
+
+}
+
+body.my-login-page {
+	background-color: var(--main);
+	font-size: 14px;
+
+}
+
+.my-login-page .row{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.my-login-page .brand {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	overflow: hidden;
+	margin: 10px auto;
+	position: relative;
+	z-index: 1;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 40px;
+}
+
+.my-login-page .brand img {
+	width: 80%;
+}
+
+.my-login-page .card-wrapper {
+	width: 400px;
+}
+
+.my-login-page .card {
+	border-color: transparent;
+	box-shadow: 0 4px 8px rgba(0,0,0,.10);
+    border-radius:10px;
+	padding: 20px;
+}
+
+.my-login-page .close{
+	position: absolute;
+	top: 25px;
+	right: 20px;
+}
+
+.my-login-page .card .card-title {
+	margin-bottom: 30px;
+	font-weight: bolder;
+}
+
+.my-login-page .form-control {
+	border-style: none;
+    background-color: var(--input-form);
+    border-radius: .3rem;
+
+}
+
+.my-login-page .form-group label {
+	width: 100%;
+}
+
+.my-login-page .form-group a{
+	color: var(--text);
+	font-size: 12px;
+}
+
+.my-login-page .form-control:focus{
+	box-shadow: var(--input-form-box-shadow);
+}
+
+.my-login-page .btn.btn-block {
+	padding: 12px 10px;
+    border-radius: 5px;
+	margin-top: 25px;
+}
+
+.my-login-page .scan {
+	margin-top: 1rem;
+}
+.my-login-page .scan a{
+	text-decoration: none;
+	color: var(--text);
+}
+
+.my-login-page .footer {
+	margin: 40px 0;
+	color: var(--text);
+	text-align: center;
+}
+
+@media screen and (max-width: 425px) {
+	.my-login-page .card-wrapper {
+		width: 90%;
+		margin: 0 auto;
+	}
+}
+
+@media screen and (max-width: 320px) {
+	.my-login-page .card.fat {
+		padding: 0;
+	}
+
+	.my-login-page .card.fat .card-body {
+		padding: 15px;
+	}
+}
+
+.my-login-page .signup{
+	font-size: 11px;
+	text-align: center;
+
+}
