@@ -1,13 +1,13 @@
 <?php
 include_once '../../../config/settings-configuration.php';
 include_once __DIR__ . '/../../../database/dbconfig.php';
-require_once __DIR__ . '/../authentication/admin-class.php';
+require_once __DIR__ . '/../authentication/superadmin-class.php';
 
 
 class SystemSettings
 {
     private $conn;
-    private $admin;
+    private $superadmin;
 
 
     public function __construct()
@@ -15,7 +15,7 @@ class SystemSettings
         $database = new Database();
         $db = $database->dbConnection();
         $this->conn = $db;
-        $this->admin = new ADMIN();
+        $this->superadmin = new SUPERADMIN();
     }
     // update system
     public function updateSystem($system_name, $system_phone_number, $system_email, $system_copy_right)
@@ -45,8 +45,8 @@ class SystemSettings
             if ($exec) {
 
                 $activity = "System Settings has been updated";
-                $user_id = $_SESSION['adminSession'];
-                $this->admin->logs($activity, $user_id);
+                $user_id = $_SESSION['superadminSession'];
+                $this->superadmin->logs($activity, $user_id);
 
                 $_SESSION['status_title'] = 'Success!';
                 $_SESSION['status'] = 'System settings successfully updated';
@@ -75,8 +75,8 @@ class SystemSettings
 
         if ($exec && move_uploaded_file($_FILES['system_logo']['tmp_name'], $folder)) {
             $activity = "System Logo has been updated";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'System logo successfully updated';
@@ -102,8 +102,8 @@ class SystemSettings
 
         if ($exec) {
             $activity = "Google Recaptcha API has been updated";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'Google Recaptcha successfully updated';
@@ -129,8 +129,8 @@ class SystemSettings
 
         if ($exec) {
             $activity = "System SMTP has been updated";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'System SMTP successfully updated';
@@ -149,9 +149,9 @@ class SystemSettings
     //add access token
     public function addAccessToken($access_key)
     {
-        $admin_id = $_SESSION['adminSession'];
+        $admin_id = $_SESSION['superadminSession'];
 
-        // Check if admin already has an access key
+        // Check if superadmin already has an access key
         $stmtCheck = $this->runQuery("SELECT id, access_key FROM admin_access_keys WHERE admin_id = :admin_id LIMIT 1");
         $stmtCheck->execute([":admin_id" => $admin_id]);
         $existing = $stmtCheck->fetch(PDO::FETCH_ASSOC);
@@ -183,7 +183,7 @@ class SystemSettings
                     $this->conn->commit();
 
                     $activity = "Access Token has been updated (propagated to users)";
-                    $this->admin->logs($activity, $admin_id);
+                    $this->superadmin->logs($activity, $admin_id);
 
                     $_SESSION['status_title'] = 'Success!';
                     $_SESSION['status'] = 'Access Token successfully updated and synced with users';
@@ -214,7 +214,7 @@ class SystemSettings
 
             if ($exec) {
                 $activity = "Access Token has been added";
-                $this->admin->logs($activity, $admin_id);
+                $this->superadmin->logs($activity, $admin_id);
 
                 $_SESSION['status_title'] = 'Success!';
                 $_SESSION['status'] = 'Access Token successfully added';
@@ -234,9 +234,9 @@ class SystemSettings
 
     public function addKwhCost($kwh_cost)
     {
-        $admin_id = $_SESSION['adminSession'];
+        $admin_id = $_SESSION['superadminSession'];
 
-        // Check if record already exists for this admin
+        // Check if record already exists for this superadmin
         $stmt = $this->runQuery('SELECT cost FROM kwh_cost WHERE admin_id = :admin_id LIMIT 1');
         $stmt->execute([":admin_id" => $admin_id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -247,7 +247,7 @@ class SystemSettings
             $exec = $stmt->execute([":cost" => $kwh_cost, ":admin_id" => $admin_id]);
 
             if ($exec) {
-                $this->admin->logs("KWH Cost has been added", $admin_id);
+                $this->superadmin->logs("KWH Cost has been added", $admin_id);
                 $_SESSION['status_title'] = 'Success!';
                 $_SESSION['status'] = 'KWH Cost successfully added';
                 $_SESSION['status_code'] = 'success';
@@ -260,7 +260,7 @@ class SystemSettings
                 $exec = $stmt->execute([":cost" => $kwh_cost, ":admin_id" => $admin_id]);
 
                 if ($exec) {
-                    $this->admin->logs("KWH Cost has been updated", $admin_id);
+                    $this->superadmin->logs("KWH Cost has been updated", $admin_id);
                     $_SESSION['status_title'] = 'Success!';
                     $_SESSION['status'] = 'KWH Cost successfully updated';
                     $_SESSION['status_code'] = 'success';

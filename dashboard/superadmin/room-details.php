@@ -11,7 +11,7 @@ $roomId = $_SESSION['room_id'] ?? '';
 
 // Fetch room data
 $stmt = $user->runQuery("SELECT * FROM rooms WHERE id=:uid AND owner_id=:owner_id");
-$stmt->execute([':uid' => $roomId, ':owner_id' => $_SESSION['adminSession']]);
+$stmt->execute([':uid' => $roomId, ':owner_id' => $_SESSION['superadminSession']]);
 $rooms_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $tenant_user_id = $rooms_data['user_id'] ?? '';
@@ -19,7 +19,6 @@ $room_id = $rooms_data['id'] ?? '';
 $room_number  = $rooms_data['room_number'] ?? '';
 $rooms_last_update  = $rooms_data['updated_at'] ?? '';
 $submeter_id  = $rooms_data['submeter_id'] ?? '';
-$kwh_limit  = $rooms_data['kwh_limit'] ?? '';
 
 // Fetch user data
 $stmt = $user->runQuery("SELECT * FROM users WHERE id=:uid AND account_status = 'Active'");
@@ -112,7 +111,8 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
 
                                     <a href="controller/room-controller.php?id=<?php echo $room_id ?>&delete_tenant=1" class="delete_tenant"><i class='bx bxs-trash'></i></a>
                                     <button class="btn-dark change" onclick="tenant_profie()"><i class='bx bxs-user'></i> Tenant Profile</button>
-                                    <button class="btn-dark change" onclick="submeter()"><i class='bx bxs-tachometer'></i> Electric Meter</button>
+                                    <button class="btn-dark change" onclick="submeter()"><i class='bx bxs-thunder'></i> Submeter</button>
+
                                 </div>
 
                                 <?php if ($rooms_user_id): ?>
@@ -171,22 +171,15 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                         <form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
                                             <div class="row gx-5 needs-validation">
                                                 <label class="form-label" style="text-align: left; padding-top: .5rem; padding-bottom: 1rem; font-size: 1rem; font-weight: bold;">
-                                                    <i class='bx bxs-key'></i> <?php echo $room_number ?> Electric Meter ID
+                                                    <i class='bx bxs-key'></i> <?php echo $room_number ?> Submeter ID
                                                     <p>Last update: <?php echo $rooms_last_update  ?></p>
                                                 </label>
                                                 <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
                                                 <div class="col-md-12">
-                                                    <label for="submeter_id" class="form-label">Electric Meter ID<span> *</span></label>
+                                                    <label for="submeter_id" class="form-label">Submeter ID<span> *</span></label>
                                                     <input type="text" class="form-control" autocapitalize="on" autocomplete="off" name="submeter_id" id="submeter_id" required value="<?php echo $submeter_id; ?>">
                                                     <div class="invalid-feedback">
-                                                        Please provide a Electric Meter ID.
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <label for="kwh_limit" class="form-label">Kwh Limit <span> (per Day)</span></label>
-                                                    <input type="number" class="form-control" autocapitalize="on" autocomplete="off" name="kwh_limit" id="kwh_limit" required value="<?php echo $kwh_limit ; ?>">
-                                                    <div class="invalid-feedback">
-                                                        Please provide a Kwh Limit.
+                                                        Please provide a Submeter ID.
                                                     </div>
                                                 </div>
                                             </div>
@@ -197,7 +190,7 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                     </div>
                                 <?php else: ?>
                                     <div id="submeter" class="no_submeter" style="display: none;">
-                                        <p>No Electric Meter assigned to this room.</p>
+                                        <p>No submeter assigned to this room.</p>
                                         <div class="addBtn2">
                                             <button type="submit" class="btn-dark" data-bs-toggle="modal" data-bs-target="#submeterModal"><i class='bx bx-user-plus'></i> Add Submeter</button>
                                         </div>
@@ -247,13 +240,6 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                         </div>
                         <div class="gauge">
                             <div class="card gauge_card">
-                                <div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
-                                    <div class="d-flex align-items-center">
-                                        <label for="yearSelectCost" class="me-2 mb-0">Year:</label>
-                                        <select id="yearSelectCost" class="form-select form-select-sm"></select>
-                                    </div>
-                                </div>
-
                                 <p class="card-title">Energy Cost Graph</p>
                                 <div id="S1"></div>
                             </div>
@@ -397,7 +383,7 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
 
     <?php echo $footer_dashboard->getFooterDashboard() ?>
     <?php include_once '../../config/sweetalert.php'; ?>
-    <script type="module" src="../../src/js/gauge.js"></script>
+    <script src="../../src/js/gauge.js"></script>
     <script type="module" src="../../src/js/submeter_data.js"></script>
     <script type="module" src="../../src/js/tenant_energy_usage_graph.js"></script>
 </body>

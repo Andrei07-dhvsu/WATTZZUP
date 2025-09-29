@@ -1,110 +1,86 @@
-am5.ready(function() {
+am5.ready(function () {
+    var root = am5.Root.new("S1");
+    root.setThemes([am5themes_Animated.new(root)]);
 
-// Create root element
-var root = am5.Root.new("S1");
+    var chart = root.container.children.push(am5xy.XYChart.new(root, {
+        panX: true, panY: true,
+        wheelX: "panX", wheelY: "zoomX",
+        pinchZoomX: true,
+        paddingLeft: 0, paddingRight: 1
+    }));
 
-// Set themes
-root.setThemes([
-    am5themes_Animated.new(root)
-]);
+    var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
+    cursor.lineY.set("visible", false);
 
-// Create chart
-var chart = root.container.children.push(am5xy.XYChart.new(root, {
-    panX: true,
-    panY: true,
-    wheelX: "panX",
-    wheelY: "zoomX",
-    pinchZoomX: true,
-    paddingLeft: 0,
-    paddingRight: 1
-}));
+    var xRenderer = am5xy.AxisRendererX.new(root, { minGridDistance: 30, minorGridEnabled: true });
+    xRenderer.labels.template.setAll({ rotation: -90, centerY: am5.p50, centerX: am5.p100, paddingRight: 15 });
+    xRenderer.grid.template.setAll({ location: 1 });
 
-// Add cursor
-var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
-cursor.lineY.set("visible", false);
+    var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+        maxDeviation: 0.3,
+        categoryField: "month",
+        renderer: xRenderer,
+        tooltip: am5.Tooltip.new(root, {})
+    }));
 
-// Create axes
-var xRenderer = am5xy.AxisRendererX.new(root, { 
-    minGridDistance: 30, 
-    minorGridEnabled: true
+    var yRenderer = am5xy.AxisRendererY.new(root, { strokeOpacity: 0.1 });
+    var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+        maxDeviation: 0.3,
+        renderer: yRenderer,
+        tooltip: am5.Tooltip.new(root, { labelText: "{valueY} ₱" })
+    }));
+
+    var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+        name: "Energy Cost",
+        xAxis: xAxis,
+        yAxis: yAxis,
+        valueYField: "cost",
+        sequencedInterpolation: true,
+        categoryXField: "month",
+        tooltip: am5.Tooltip.new(root, { labelText: "{valueY} ₱" })
+    }));
+
+    series.columns.template.setAll({ cornerRadiusTL: 5, cornerRadiusTR: 5, strokeOpacity: 0 });
+    series.columns.template.adapters.add("fill", (fill, target) => chart.get("colors").getIndex(series.columns.indexOf(target)));
+    series.columns.template.adapters.add("stroke", (stroke, target) => chart.get("colors").getIndex(series.columns.indexOf(target)));
+
+    // 📌 Get submeterId from div data attribute
+    const chartContainer = document.getElementById("chartContainer");
+    const submeterId = chartContainer.dataset.roomsubmeterId;
+
+    // 📌 Function to load data dynamically
+    function loadData(submeterId, year) {
+        fetch(`controller/monthly_cost_data.php?year=${year}&submeter_id=${encodeURIComponent(submeterId)}`)
+            .then(res => res.json())
+            .then(data => {
+                xAxis.data.setAll(data);
+                series.data.setAll(data);
+            })
+            .catch(err => console.error("Error loading data:", err));
+    }
+
+    // 📌 Populate year dropdown
+    const yearSelect = document.getElementById("yearSelectCost");
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+        let opt = document.createElement("option");
+        opt.value = y;
+        opt.text = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+    }
+
+    // 📌 Load initial data (current year)
+    loadData(submeterId, currentYear);
+
+    // 📌 Change data when selecting another year
+    yearSelect.addEventListener("change", function () {
+        loadData(submeterId, this.value);
+    });
+
+    series.appear(1000);
+    chart.appear(1000, 100);
 });
-
-xRenderer.labels.template.setAll({
-    rotation: -90,
-    centerY: am5.p50,
-    centerX: am5.p100,
-    paddingRight: 15
-});
-
-xRenderer.grid.template.setAll({
-    location: 1
-})
-
-var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
-    maxDeviation: 0.3,
-    categoryField: "month",
-    renderer: xRenderer,
-    tooltip: am5.Tooltip.new(root, {})
-}));
-
-var yRenderer = am5xy.AxisRendererY.new(root, {
-    strokeOpacity: 0.1
-})
-
-var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
-    maxDeviation: 0.3,
-    renderer: yRenderer,
-    tooltip: am5.Tooltip.new(root, {
-        labelText: "{valueY} ₱"
-    })
-}));
-
-// Create series
-var series = chart.series.push(am5xy.ColumnSeries.new(root, {
-    name: "Energy Cost",
-    xAxis: xAxis,
-    yAxis: yAxis,
-    valueYField: "cost",
-    sequencedInterpolation: true,
-    categoryXField: "month",
-    tooltip: am5.Tooltip.new(root, {
-        labelText: "{valueY} ₱"
-    })
-}));
-
-series.columns.template.setAll({ cornerRadiusTL: 5, cornerRadiusTR: 5, strokeOpacity: 0 });
-series.columns.template.adapters.add("fill", function (fill, target) {
-    return chart.get("colors").getIndex(series.columns.indexOf(target));
-});
-series.columns.template.adapters.add("stroke", function (stroke, target) {
-    return chart.get("colors").getIndex(series.columns.indexOf(target));
-});
-
-// Example costing energy data per month
-var data = [
-    { month: "Jan", cost: 120 },
-    { month: "Feb", cost: 110 },
-    { month: "Mar", cost: 130 },
-    { month: "Apr", cost: 125 },
-    { month: "May", cost: 140 },
-    { month: "Jun", cost: 135 },
-    { month: "Jul", cost: 150 },
-    { month: "Aug", cost: 145 },
-    { month: "Sep", cost: 138 },
-    { month: "Oct", cost: 128 },
-    { month: "Nov", cost: 115 },
-    { month: "Dec", cost: 122 }
-];
-
-xAxis.data.setAll(data);
-series.data.setAll(data);
-
-// Animate on load
-series.appear(1000);
-chart.appear(1000, 100);
-
-}); // end am5.ready()
-
 //--------------------------------------------------------------------------------
 
 // Add buttons for Daily, Weekly, Monthly

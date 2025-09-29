@@ -36,7 +36,7 @@ try {
         $sql = "
             SELECT consumption_date AS date,
                    SUM(kwh_end - kwh_start) AS usage_value
-            FROM daily_logs
+            FROM consumption
             WHERE submeter_id = :submeter_id
               AND consumption_date BETWEEN :start AND :end
             GROUP BY consumption_date
@@ -64,7 +64,7 @@ try {
         $sql = "
             SELECT MIN(consumption_date) AS date,
                    SUM(kwh_end - kwh_start) AS usage_value
-            FROM daily_logs
+            FROM consumption
             WHERE submeter_id = :submeter_id
               AND consumption_date BETWEEN :start AND :end
             GROUP BY YEARWEEK(consumption_date, 1)
@@ -86,7 +86,7 @@ try {
         $sql = "
             SELECT DATE_FORMAT(consumption_date, '%Y-%m-01') AS date,
                    SUM(kwh_end - kwh_start) AS usage_value
-            FROM daily_logs
+            FROM consumption
             WHERE submeter_id = :submeter_id
               AND YEAR(consumption_date) = :year
             GROUP BY YEAR(consumption_date), MONTH(consumption_date)

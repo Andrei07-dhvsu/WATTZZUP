@@ -1,17 +1,17 @@
 <?php
 include_once '../../../config/settings-configuration.php';
 include_once __DIR__ . '/../../../database/dbconfig.php';
-require_once __DIR__ . '/../authentication/admin-class.php';
+require_once __DIR__ . '/../authentication/superadmin-class.php';
 
 
 class Room
 {
     private $conn;
-    private $admin;
+    private $superadmin;
 
     public function __construct()
     {
-        $this->admin = new ADMIN();
+        $this->superadmin = new SUPERADMIN();
 
 
         $database = new Database();
@@ -28,7 +28,7 @@ class Room
     public function addRoomNumber($RoomNumber)
     {
         // Check if room number already exists
-        $stmt = $this->admin->runQuery('SELECT COUNT(*) FROM rooms WHERE room_number = :room_number');
+        $stmt = $this->superadmin->runQuery('SELECT COUNT(*) FROM rooms WHERE room_number = :room_number');
         $stmt->execute(array(":room_number" => $RoomNumber));
         $count = $stmt->fetchColumn();
 
@@ -41,16 +41,16 @@ class Room
             exit;
         }
 
-        $stmt = $this->admin->runQuery('INSERT INTO rooms (room_number, owner_id) VALUES (:room_number, :owner_id)');
+        $stmt = $this->superadmin->runQuery('INSERT INTO rooms (room_number, owner_id) VALUES (:room_number, :owner_id)');
         $exec = $stmt->execute(array(
             ":room_number" => $RoomNumber,
-            ":owner_id" => $_SESSION['adminSession'],
+            ":owner_id" => $_SESSION['superadminSession'],
         ));
 
         if ($exec) {
             $activity = "New Room has been added ($RoomNumber)";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'New Room has been added';
@@ -95,8 +95,8 @@ class Room
 
         if ($exec) {
             $activity = "New Tenant has been added to room (ID: $room_id)";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'New Tenant has been added to the room';
@@ -113,68 +113,51 @@ class Room
         exit;
     }
 
-    public function addSubmeterId($room_id, $submeter_id, $kwh_limit = null)
-    {
+    public function addSubmeterId($room_id, $submeter_id){
         // Check if the submeter_id is already assigned to another room
         $stmt = $this->runQuery('SELECT id FROM rooms WHERE submeter_id = :submeter_id AND id != :room_id');
         $stmt->execute(array(
             ":submeter_id" => $submeter_id,
-            ":room_id"     => $room_id
+            ":room_id" => $room_id
         ));
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existing) {
             $_SESSION['status_title'] = 'Duplicate!';
-            $_SESSION['status'] = 'This Electric Meter ID is already assigned to another room.';
+            $_SESSION['status'] = 'This Submeter ID is already assigned to another room.';
             $_SESSION['status_code'] = 'error';
             $_SESSION['status_timer'] = 40000;
             header('Location: ../room-details');
             exit;
         }
 
-        // Fetch current values for this room
-        $stmt = $this->runQuery('SELECT submeter_id, kwh_limit FROM rooms WHERE id = :id');
+        // Fetch current submeter_id for the room
+        $stmt = $this->runQuery('SELECT submeter_id FROM rooms WHERE id = :id');
         $stmt->execute(array(":id" => $room_id));
         $current = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 🛑 Check if no change (submeter and kwh_limit same as before)
-        if (
-            $current && $current['submeter_id'] == $submeter_id &&
-            ($kwh_limit === null || $current['kwh_limit'] == $kwh_limit)
-        ) {
-
+        if ($current && $current['submeter_id'] == $submeter_id) {
             $_SESSION['status_title'] = 'No Change!';
-            $_SESSION['status'] = 'The Electric Meter ID and kWh limit are already assigned to this room.';
+            $_SESSION['status'] = 'The Submeter ID is already assigned to this room.';
             $_SESSION['status_code'] = 'info';
             $_SESSION['status_timer'] = 40000;
             header('Location: ../room-details');
             exit;
         }
 
-        // ✅ Build query dynamically
-        if ($kwh_limit !== null && $kwh_limit !== '') {
-            $stmt = $this->runQuery('UPDATE rooms SET submeter_id = :submeter_id, kwh_limit = :kwh_limit WHERE id = :id');
-            $exec = $stmt->execute(array(
-                ":submeter_id" => $submeter_id,
-                ":kwh_limit"   => $kwh_limit,
-                ":id"          => $room_id
-            ));
-            $logMsg = "New Submeter ID and kWh limit have been added to room.";
-        } else {
-            $stmt = $this->runQuery('UPDATE rooms SET submeter_id = :submeter_id WHERE id = :id');
-            $exec = $stmt->execute(array(
-                ":submeter_id" => $submeter_id,
-                ":id"          => $room_id
-            ));
-            $logMsg = "New Submeter ID has been added to room.";
-        }
+        $stmt = $this->runQuery('UPDATE rooms SET submeter_id = :submeter_id WHERE id = :id');
+        $exec = $stmt->execute(array(
+            ":submeter_id" => $submeter_id,
+            ":id" => $room_id
+        ));
 
         if ($exec) {
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($logMsg, $user_id);
+            $activity = "New Submeter ID has been added to room (ID: $room_id)";
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
-            $_SESSION['status'] = $logMsg;
+            $_SESSION['status'] = 'New Submeter ID has been added to the room';
             $_SESSION['status_code'] = 'success';
             $_SESSION['status_timer'] = 40000;
         } else {
@@ -198,8 +181,8 @@ class Room
 
         if ($exec) {
             $activity = "User has been removed from room (ID: $room_id)";
-            $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($activity, $user_id);
+            $user_id = $_SESSION['superadminSession'];
+            $this->superadmin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'User has been removed from the room';
@@ -244,8 +227,7 @@ if (isset($_POST['btn-add-tenant'])) {
 if (isset($_POST['btn-add-submeterId'])) {
     $room_id = trim($_POST['room_id']);
     $submeter_id = trim($_POST['submeter_id']);
-    $kwh_limit = trim($_POST['kwh_limit']);
 
     $addSubmeterId = new Room();
-    $addSubmeterId->addSubmeterId($room_id, $submeter_id, $kwh_limit);
+    $addSubmeterId->addSubmeterId($room_id, $submeter_id);
 }

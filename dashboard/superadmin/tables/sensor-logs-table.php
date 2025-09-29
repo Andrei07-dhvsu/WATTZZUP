@@ -12,9 +12,9 @@ if(!$user->isUserLoggedIn())
 // Use the runQuery method to prepare and execute queries.
 function get_total_row($user)
 {
-    $pdoQuery = "SELECT COUNT(*) as total_rows FROM plants WHERE status = :status";
+    $pdoQuery = "SELECT COUNT(*) as total_rows FROM sensor_logs";
     $pdoResult = $user->runQuery($pdoQuery);
-    $pdoResult->execute([':status' => "available"]);
+    $pdoResult->execute();
     $row = $pdoResult->fetch(PDO::FETCH_ASSOC);
     return $row['total_rows'];
 }
@@ -32,7 +32,7 @@ else
     $start = 0;
 }
 
-$query = "SELECT * FROM plants WHERE status = :status";
+$query = "SELECT * FROM sensor_logs";
 
 $output = '';
 if($_POST['query'] != '') {
@@ -41,9 +41,9 @@ if($_POST['query'] != '') {
     $formatted_date = date("F j, Y", strtotime($search_term)); // Convert the search term to date format
 
     // Modify the query to search by email, activity, or formatted created_at date
-    $query .= ' AND plant_name LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR dry_threshold LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR watered_threshold LIKE "%'.str_replace(' ', '%', $search_term).'%" ';
+    $query .= ' WHERE sensor LIKE "%'.str_replace(' ', '%', $search_term).'%" 
+                OR status LIKE "%'.str_replace(' ', '%', $search_term).'%" 
+                OR DATE_FORMAT(sensor_logs.created_at, "%M %e, %Y") LIKE "%'.str_replace(' ', '%', $formatted_date).'%"';
 }
 
 $query .= ' ORDER BY id DESC ';
@@ -52,12 +52,12 @@ $filter_query = $query . ' LIMIT '.$start.', '.$limit.'';
 
 // Use the runQuery method to prepare and execute the query.
 $statement = $user->runQuery($query);
-$statement->execute([':status' => "available"]);
+$statement->execute();
 $total_data = $statement->rowCount();
 
 // Use the runQuery method to prepare and execute the filtered query.
 $statement = $user->runQuery($filter_query);
-$statement->execute([':status' => "available"]);
+$statement->execute();
 $total_filter_data = $statement->rowCount();
 
 if($total_data > 0)
@@ -68,28 +68,21 @@ if($total_data > 0)
         </div>
         <thead>
             <th>#</th>
-            <th>PLANT NAME</th>
-            <th>WATERED THRESHOLD</th>
-            <th>DRY THRESHOLD</th>
-            <th>DATE ADDED</th>
-            <th>ACTION</th>
-
+            <th>SENSOR</th>
+            <th>STATUS</th>
+            <th>LOG DATE</th>
         </thead>
     ';
 
     while($row = $statement->fetch(PDO::FETCH_ASSOC))
     {
+
         $output .= '
         <tr>
             <td>'.$row["id"].'</td>
-            <td>'.$row["plant_name"].'</td>
-            <td>'.$row["watered_threshold"].'</td>
-            <td>'.$row["dry_threshold"].'</td>
+            <td>'.$row["sensor"].'</td>
+            <td>'.$row["status"].'</td>
             <td>'.date("F j, Y (h:i A)", strtotime($row['created_at'])).'</td>
-            <td>
-            <button type="button" class="btn btn-primary V"><a href="edit_plants?id='.$row["id"].'" class="edit"><i class="bx bxs-edit"></i></a></button>
-            <button type="button" class="btn btn-danger V"><a href="controller/plants-controller?id='.$row["id"].'&delete_plants=1" class="delete"><i class="bx bxs-trash"></i></a></button>
-            </td>  
             </tr>
         ';
     }

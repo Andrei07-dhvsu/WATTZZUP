@@ -1,20 +1,16 @@
 <?php
-require_once 'admin-class.php';
+require_once 'superadmin-class.php';
 require_once __DIR__ . '/../../user/authentication/user-class.php';
-require_once __DIR__ . '/../../superadmin/authentication/superadmin-class.php';
-
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $superadmin = new SUPERADMIN();
-$admin = new ADMIN();
-$user = new USER();
 
-$site_secret_key = $admin->siteSecretKey();
+$site_secret_key = $superadmin->siteSecretKey();
 
-if ($admin->isUserLoggedIn() != "" || $user->isUserLoggedIn() != "" || $superadmin->isUserLoggedIn() != "") {
-    $admin->redirect('');
+if ($superadmin->isUserLoggedIn() != "") {
+    $superadmin->redirect('');
 }
 
 if (isset($_POST['btn-signin'])) {
@@ -40,7 +36,7 @@ if (isset($_POST['btn-signin'])) {
         $email = trim($_POST['email']);
         $upass = trim($_POST['password']);
 
-        $stmt = $admin->runQuery('SELECT * FROM users WHERE email = :email');
+        $stmt = $superadmin->runQuery('SELECT * FROM users WHERE email = :email');
         $stmt->execute(array(
             ":email" => $email,
         ));
@@ -50,40 +46,19 @@ if (isset($_POST['btn-signin'])) {
         if ($rowCount == 1) {
             $existingData = $stmt->fetch();
 
-            if ($existingData['user_type'] == 0) { //superadmin
-                if ($superadmin->login($email, $upass)) {
-                    $_SESSION['status_title'] = "Hey !";
-                    $_SESSION['status'] = "Welcome to WattzUp! ";
-                    $_SESSION['status_code'] = "success";
-                    $_SESSION['status_timer'] = 10000;
-                    header("Location: ../../superadmin/");
-                    exit();
-                }
-            } elseif ($existingData['user_type'] == 1) { //admin
-                if ($admin->login($email, $upass)) {
-                    $_SESSION['status_title'] = "Hey !";
-                    $_SESSION['status'] = "Welcome to WattzUp! ";
-                    $_SESSION['status_code'] = "success";
-                    $_SESSION['status_timer'] = 10000;
-                    header("Location: ../");
-                    exit();
-                }
-            } elseif ($existingData['user_type'] == 2) { //user
-                if ($user->login($email, $upass)) {
-                    $_SESSION['status_title'] = "Hey !";
-                    $_SESSION['status'] = "Welcome WattzUp! ";
-                    $_SESSION['status_code'] = "success";
-                    $_SESSION['status_timer'] = 10000;
-                    unset($_SESSION['property_details']);
-                    header("Location: ../../user/");
-                    exit();
-                }
+            if ($superadmin->login($email, $upass)) {
+                $_SESSION['status_title'] = "Hey !";
+                $_SESSION['status'] = "Welcome to WattzUp! ";
+                $_SESSION['status_code'] = "success";
+                $_SESSION['status_timer'] = 10000;
+                header("Location: ../private/superadmin/");
+                exit();
             } else {
                 $_SESSION['status_titlek'] = "Sorry !";
                 $_SESSION['status'] = "No account found";
                 $_SESSION['status_code'] = "error";
                 $_SESSION['status_timer'] = 10000000;
-                header("Location: ../../../");
+                header("Location: ../../../private/superadmin/");
                 exit();
             }
         } else {
@@ -91,7 +66,7 @@ if (isset($_POST['btn-signin'])) {
             $_SESSION['status'] = "No account found or your account has been removed!";
             $_SESSION['status_code'] = "error";
             $_SESSION['status_timer'] = 10000000;
-            header("Location: ../../../");
+            header("Location: ../../../private/superadmin/");
             exit();
         }
     } else {

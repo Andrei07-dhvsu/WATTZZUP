@@ -6,49 +6,34 @@ require_once '../authentication/admin-class.php';
 $user = new ADMIN();
 if(!$user->isUserLoggedIn())
 {
-    $user->redirect('../../../private/admin/');
+ $user->redirect('../../../private/admin/');
 }
 
-$stmt = $user->runQuery("SELECT * FROM admin_access_keys WHERE admin_id = :uid");
-$stmt->execute([":uid" => $_SESSION['adminSession']]);
-$admin_data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$access_key = $admin_data['access_key'];
-
 // Use the runQuery method to prepare and execute queries.
-function get_total_row($user, $access_key)
+function get_total_row($user)
 {
-    $pdoQuery = "SELECT COUNT(*) as total_rows 
-                 FROM users 
-                 WHERE user_type = :user_type 
-                   AND account_status = :account_status 
-                   AND access_key = :access_key";
-
+    $pdoQuery = "SELECT COUNT(*) as total_rows FROM logs";
     $pdoResult = $user->runQuery($pdoQuery);
-    $pdoResult->execute([
-        ":user_type" => 2,
-        ":account_status" => "active",
-        ":access_key" => $access_key
-    ]);
-
+    $pdoResult->execute();
     $row = $pdoResult->fetch(PDO::FETCH_ASSOC);
     return $row['total_rows'];
 }
 
-// ✅ pass $access_key here
-$total_record = get_total_row($user, $access_key);
-
-$limit = 20;
+$total_record = get_total_row($user);
+$limit = '20';
 $page = 1;
-
-if (isset($_POST['page'])) {
+if(isset($_POST['page']))
+{
     $start = (($_POST['page'] - 1) * $limit);
     $page = $_POST['page'];
-} else {
+}
+else
+{
     $start = 0;
 }
 
-$query = "SELECT * FROM users WHERE user_type = :user_type AND account_status = :account_status AND access_key = :access_key";
+$query = "SELECT logs.*, users.email FROM logs 
+          INNER JOIN users ON logs.user_id = users.id";
 
 $output = '';
 if($_POST['query'] != '') {
@@ -57,10 +42,9 @@ if($_POST['query'] != '') {
     $formatted_date = date("F j, Y", strtotime($search_term)); // Convert the search term to date format
 
     // Modify the query to search by email, activity, or formatted created_at date
-    $query .= ' AND first_name LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR last_name LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR middle_name LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR email LIKE "%'.str_replace(' ', '%', $search_term).'%" ';
+    $query .= ' WHERE users.email LIKE "%'.str_replace(' ', '%', $search_term).'%" 
+                OR logs.activity LIKE "%'.str_replace(' ', '%', $search_term).'%" 
+                OR DATE_FORMAT(logs.created_at, "%M %e, %Y") LIKE "%'.str_replace(' ', '%', $formatted_date).'%"';
 }
 
 $query .= ' ORDER BY id DESC ';
@@ -69,12 +53,12 @@ $filter_query = $query . ' LIMIT '.$start.', '.$limit.'';
 
 // Use the runQuery method to prepare and execute the query.
 $statement = $user->runQuery($query);
-$statement->execute([":user_type" => 2, ":account_status" => "active", ":access_key" => $access_key]);
+$statement->execute();
 $total_data = $statement->rowCount();
 
 // Use the runQuery method to prepare and execute the filtered query.
 $statement = $user->runQuery($filter_query);
-$statement->execute([":user_type" => 2, ":account_status" => "active", ":access_key" => $access_key]);
+$statement->execute();
 $total_filter_data = $statement->rowCount();
 
 if($total_data > 0)
@@ -85,31 +69,27 @@ if($total_data > 0)
         </div>
         <thead>
             <th>#</th>
-            <th>PROFILE</th>
-            <th>NAME</th>
-            <th>EMAIL</th>
-            <th>ACTIONS</th>
-
+            <th>USER</th>
+            <th>ACTIVITY</th>
+            <th>DATE ADDED</th>
         </thead>
     ';
 
     while($row = $statement->fetch(PDO::FETCH_ASSOC))
     {
-        if ($row["account_status"] == "active") {
-            $button = '<button type="button" class="btn btn-danger V"><a href="controller/user-controller?user_id='.$row["id"].'&disabled_user=1" class="delete"><i class="bx bxs-trash"></i></a></button>';
-            $status = '<button type="button" class="btn btn-success V" style="width: 80px;">Active</button>';
-          
-          }
+        $user_id = $row["user_id"];
+
+        $pdoQuery = "SELECT * FROM users WHERE id = :id";
+        $pdoResult = $user->runQuery($pdoQuery);
+        $pdoResult->execute(array(":id" => $user_id));
+        $user_data = $pdoResult->fetch(PDO::FETCH_ASSOC);
 
         $output .= '
         <tr>
             <td>'.$row["id"].'</td>
-            <td><a href="../../src/img/' . $row["profile"] . '" data-lightbox="images" data-title="Agent Valid ID"><img src="../../src/img/' . $row["profile"] . '"></a></td>
-            <td>'.$row["last_name"].', '.$row["first_name"].' '.$row["middle_name"].'</td>
-            <td>'.$row["email"].'</td>
-            <td>
-            '.$button.'
-            </td>  
+            <td>'.$user_data["email"].'</td>
+            <td>'.$row["activity"].'</td>
+            <td>'.date("F j, Y (h:i A)", strtotime($row['created_at'])).'</td>
             </tr>
         ';
     }

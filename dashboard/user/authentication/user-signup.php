@@ -30,9 +30,10 @@ class UserController
         return $stmt;
     }
 
-    public function userVerifiy($otp, $email, $csrf_token){
+    public function userVerifiy($otp, $email, $csrf_token, $access_key)
+    {
 
-        if (!isset($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)){
+        if (!isset($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
             $_SESSION['status_title'] = "Oops!";
             $_SESSION['status'] = "Invalidd CSRF Token.";
             $_SESSION['status_code'] = "error";
@@ -41,9 +42,22 @@ class UserController
             exit;
         }
 
+        $stmtKey = $this->user->runQuery("SELECT * FROM admin_access_keys WHERE access_key = :access_key");
+        $stmtKey->execute([":access_key" => $access_key]);
+        $keyRow = $stmtKey->fetch(PDO::FETCH_ASSOC);
+
+        if (!$keyRow) {
+            $_SESSION['status_title'] = "Oops!";
+            $_SESSION['status'] = "Invalid Access Key. Please get the correct key from your landlord.";
+            $_SESSION['status_code'] = "error";
+            $_SESSION['status_timer'] = 100000;
+            header('Location: ../../../signup');
+            exit;
+        }
+
         unset($_SESSION['csrf_token']);
         $stmt = $this->user->runQuery("SELECT * FROM users WHERE email=:email");
-        $stmt->execute(array(":email"=>$email));
+        $stmt->execute(array(":email" => $email));
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($stmt->rowCount() > 0) {
@@ -53,9 +67,9 @@ class UserController
             $_SESSION['status_timer'] = 100000;
             header('Location: ../../../signup');
             exit();
-        }else{
+        } else {
 
-           $_SESSION['OTP'] = $otp;
+            $_SESSION['OTP'] = $otp;
 
             $subject = "OTP VERIFICATION";
             $message = "
@@ -135,7 +149,8 @@ class UserController
         }
     }
 
-    public function verifyOtp($first_name, $middle_name, $last_name, $email, $password, $tokencode, $user_type, $otp, $csrf_token) {
+    public function verifyOtp($first_name, $middle_name, $last_name, $email, $access_key, $password, $tokencode, $user_type, $otp, $csrf_token)
+    {
         // Check if OTP session is set
         if (!isset($_SESSION['OTP'])) {
             $_SESSION['status_title'] = "Oops!";
@@ -145,12 +160,12 @@ class UserController
             header('Location: ../../../signup');
             exit;
         }
-    
+
         // Verify OTP
         if ($otp == $_SESSION['OTP']) {
             // Clear OTP session
             unset($_SESSION['OTP']);
-    
+
             // Email content and security enhancement
             $subject = "VERIFICATION SUCCESS";
             $message = "
@@ -221,15 +236,19 @@ class UserController
                 </div>
             </body>
             </html>";
-    
+
             // Send verification success email
             $this->user->send_mail($email, $message, $subject, $this->smtp_email, $this->smtp_password, $this->system_name);
             // Proceed with user registration
-            $this->userRegistration($first_name, $middle_name, $last_name, $email, $password, $tokencode, $user_type, $csrf_token);
+            $this->userRegistration($first_name, $middle_name, $last_name, $email, $access_key, $password, $tokencode, $user_type, $csrf_token);
             // Clear session variables for non-verified user data
-            unset($_SESSION['not_verify_first_name'], $_SESSION['not_verify_middle_name'], $_SESSION['not_verify_last_name'], 
-                  $_SESSION['not_verify_email'], $_SESSION['not_verify_password']);
-    
+            unset(
+                $_SESSION['not_verify_first_name'],
+                $_SESSION['not_verify_middle_name'],
+                $_SESSION['not_verify_last_name'],
+                $_SESSION['not_verify_email'],
+                $_SESSION['not_verify_password']
+            );
         } else {
             // Invalid OTP case
             $_SESSION['status_title'] = "Oops!";
@@ -240,11 +259,11 @@ class UserController
             exit;
         }
     }
-    
 
-    public function userRegistration($first_name, $middle_name, $last_name, $email, $password, $tokencode, $user_type, $csrf_token)
+
+    public function userRegistration($first_name, $middle_name, $last_name, $email, $access_key, $password, $tokencode, $user_type, $csrf_token)
     {
-        if (!isset($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)){
+        if (!isset($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
             $_SESSION['status_title'] = "Oops!";
             $_SESSION['status'] = "Invalidd CSRF Token.";
             $_SESSION['status_code'] = "error";
@@ -256,25 +275,25 @@ class UserController
 
         $hash_password = md5($password);
 
-        $stmt = $this->runQuery('INSERT INTO users(first_name, middle_name, last_name, email, password, tokencode, user_type) VALUES(:first_name, :middle_name, :last_name, :email, :password, :tokencode, :user_type)');
+        $stmt = $this->runQuery('INSERT INTO users(first_name, middle_name, last_name, email, access_key, password, tokencode, user_type) VALUES(:first_name, :middle_name, :last_name, :email, :access_key, :password, :tokencode, :user_type)');
         $exec = $stmt->execute(array(
             ":first_name" => $first_name,
             ":middle_name" => $middle_name,
             ":last_name" => $last_name,
             ":email" => $email,
+            ":access_key" => $access_key,
             ":password" => $hash_password,
             ":tokencode" => $tokencode,
             ":user_type" => $user_type,
         ));
-        if($exec){
+        if ($exec) {
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = 'Successfully Registration';
             $_SESSION['status_code'] = 'success';
             $_SESSION['status_timer'] = 40000;
             header('Location: ../../../');
             exit;
-        }
-        else{
+        } else {
             $_SESSION['status_title'] = "Oops!";
             $_SESSION['status'] = 'Something went wrong, please try again!';
             $_SESSION['status_code'] = "error";
@@ -291,13 +310,14 @@ if (isset($_POST['btn-signup'])) {
     $_SESSION['not_verify_middle_name'] = trim($_POST['middle_name']);
     $_SESSION['not_verify_last_name'] = trim($_POST['last_name']);
     $_SESSION['not_verify_email'] = trim($_POST['email']);
-
-    $email = trim($_POST['email']);
+    $_SESSION['not_verify_access_key'] = trim($_POST['access_key']);
+    $access_key = trim(string: $_POST['access_key']);
+    $email = trim(string: $_POST['email']);
     $otp = rand(100000, 999999);
 
 
     $verify_user = new UserController();
-    $verify_user->userVerifiy($otp, $email, $csrf_token);
+    $verify_user->userVerifiy($otp, $email, $csrf_token, $access_key);
 }
 
 if (isset($_POST['btn-verify'])) {
@@ -306,6 +326,7 @@ if (isset($_POST['btn-verify'])) {
     $middle_name        =  $_SESSION['not_verify_middle_name'];
     $last_name          =  $_SESSION['not_verify_last_name'];
     $email              = $_SESSION['not_verify_email'];
+    $access_key        = $_SESSION['not_verify_access_key'];
     $tokencode          = md5(uniqid(rand()));
     $user_type          = 2;
     $otp                = trim($_POST['otp']);
@@ -316,5 +337,5 @@ if (isset($_POST['btn-verify'])) {
     $password      = substr($shuffle, 0, 8);
 
     $verify_otp = new UserController();
-    $verify_otp->verifyOtp($first_name, $middle_name, $last_name, $email, $password, $tokencode, $user_type, $otp, $csrf_token);
+    $verify_otp->verifyOtp($first_name, $middle_name, $last_name, $email, $access_key, $password, $tokencode, $user_type, $otp, $csrf_token);
 }

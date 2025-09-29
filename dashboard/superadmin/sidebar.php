@@ -69,7 +69,7 @@ class SideBar
                     </a>
                 </li>
                 <li>
-                    <a href="authentication/admin-signout" class="btn-signout">
+                    <a href="authentication/superadmin-signout" class="btn-signout">
                         <i class="bx bxs-log-out-circle"></i>
                         <span class="text">Signout</span>
                     </a>

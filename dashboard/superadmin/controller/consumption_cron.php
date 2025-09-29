@@ -1,9 +1,9 @@
 <?php
 
 include_once __DIR__ . '/../../../database/dbconfig.php';
-require_once __DIR__ . '/../authentication/admin-class.php';
+require_once __DIR__ . '/../authentication/superadmin-class.php';
 
-$user = new ADMIN();
+$user = new SUPERADMIN();
 $proxyURL = $user->proxyUrl();
 
 $currentTime = date('H:i');

@@ -1,15 +1,15 @@
 <?php
 require_once 'admin-class.php';
-$superadmin = new ADMIN();
+$admin = new ADMIN();
 
-if(!$superadmin->isUserLoggedIn())
+if(!$admin->isUserLoggedIn())
 {
- $superadmin->redirect('../../../');
+ $admin->redirect('../../../');
 }
 
-if($superadmin->isUserLoggedIn()!="")
+if($admin->isUserLoggedIn()!="")
 {
- $superadmin->logout();
- $superadmin->redirect('../../../');
+ $admin->logout();
+ $admin->redirect('../../../');
 }
 ?>

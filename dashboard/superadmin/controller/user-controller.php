@@ -1,16 +1,16 @@
 <?php
 include_once '../../../config/settings-configuration.php';
 include_once __DIR__ . '/../../../database/dbconfig.php';
-require_once __DIR__ . '/../authentication/admin-class.php';
+require_once __DIR__ . '/../authentication/superadmin-class.php';
 
 class UserManagement
 {
     private $conn;
-    private $admin;
+    private $superadmin;
 
     public function __construct()
     {
-        $this->admin = new ADMIN();
+        $this->superadmin = new SUPERADMIN();
 
 
         $database = new Database();
@@ -28,7 +28,7 @@ public function deleteUser($user_id)
 {
     // 1. Disable the user account
     $status = "disabled";
-    $stmt = $this->admin->runQuery('UPDATE users SET account_status = :account_status WHERE id = :id');
+    $stmt = $this->superadmin->runQuery('UPDATE users SET account_status = :account_status WHERE id = :id');
     $exec = $stmt->execute([
         ":account_status" => $status,
         ":id" => $user_id
@@ -36,7 +36,7 @@ public function deleteUser($user_id)
 
     if ($exec) {
         // 2. Remove the user from any assigned room(s)
-        $stmtRoom = $this->admin->runQuery('UPDATE rooms SET user_id = NULL, status = :status WHERE user_id = :user_id');
+        $stmtRoom = $this->superadmin->runQuery('UPDATE rooms SET user_id = NULL, status = :status WHERE user_id = :user_id');
         $stmtRoom->execute([
             ":status" => 'vacant',
             ":user_id" => $user_id
@@ -44,8 +44,8 @@ public function deleteUser($user_id)
 
         // 3. Log activity
         $activity = "User (ID: $user_id) has been deleted and removed from assigned room(s)";
-        $admin_id = $_SESSION['adminSession'];
-        $this->admin->logs($activity, $admin_id);
+        $admin_id = $_SESSION['superadminSession'];
+        $this->superadmin->logs($activity, $admin_id);
 
         // 4. Success response
         $_SESSION['status_title'] = 'Success!';

@@ -42,7 +42,7 @@ $footer_signin = new FooterSignin();
                                 </div>
                                 <div class="form-group">
                                     <label for="middle_name">Middle Name</label>
-                                    <input id="middle_name" type="text" class="form-control" name="middle_name"  autofocus>
+                                    <input id="middle_name" type="text" class="form-control" name="middle_name" autofocus>
                                 </div>
                                 <div class="form-group">
                                     <label for="last_name">Last Name</label>
@@ -58,7 +58,13 @@ $footer_signin = new FooterSignin();
                                         Email is required!
                                     </div>
                                 </div>
-
+                                <div class="form-group">
+                                    <label for="access_key">Access Key</label>
+                                    <input id="access_key" type="text" class="form-control" name="access_key" required autofocus>
+                                    <div class="invalid-feedback">
+                                        Access Key is required (please obtain the access key from the landlord)! 
+                                    </div>
+                                </div>
                                 <div class="form-group m-0">
                                     <button type="submit" id="submit" class="btn btn-dark btn-block" name="btn-signup">
                                         Sign Up
