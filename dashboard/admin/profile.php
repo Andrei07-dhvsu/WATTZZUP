@@ -158,7 +158,7 @@ include_once 'header.php';
                                     </div>
 
                                     <div class="addBtn">
-                                        <button type="submit" class="warning" name="btn-update-profile" id="btn-update" onclick="return IsEmpty(); sexEmpty();">Update</button>
+                                        <button type="submit" class="warning" name="btn-update-profile" onclick="return IsEmpty(); sexEmpty();">Update</button>
                                     </div>
                                 </form>
                             </div>
@@ -194,7 +194,7 @@ include_once 'header.php';
                                     </div>
 
                                     <div class="addBtn">
-                                        <button type="submit" class="btn-dark" name="btn-update-avatar" id="btn-update" onclick="return IsEmpty(); sexEmpty();">Update</button>
+                                        <button type="submit" class="btn-dark" name="btn-update-avatar" onclick="return IsEmpty(); sexEmpty();">Update</button>
                                     </div>
                                 </form>
                             </div>
@@ -234,7 +234,7 @@ include_once 'header.php';
                                     </div>
 
                                     <div class="addBtn">
-                                        <button type="submit" class="btn-dark" name="btn-update-password" id="btn-update" onclick="return IsEmpty(); sexEmpty();">Update</button>
+                                        <button type="submit" class="btn-dark" name="btn-update-password" onclick="return IsEmpty(); sexEmpty();">Update</button>
                                     </div>
                                 </form>
                             </div>

@@ -28,8 +28,8 @@ class Room
     public function addRoomNumber($RoomNumber)
     {
         // Check if room number already exists
-        $stmt = $this->admin->runQuery('SELECT COUNT(*) FROM rooms WHERE room_number = :room_number');
-        $stmt->execute(array(":room_number" => $RoomNumber));
+        $stmt = $this->admin->runQuery('SELECT COUNT(*) FROM rooms WHERE room_number = :room_number and owner_id = :owner_id');
+        $stmt->execute(array(":room_number" => $RoomNumber, ":owner_id" => $_SESSION['adminSession']));
         $count = $stmt->fetchColumn();
 
         if ($count > 0) {
@@ -67,14 +67,14 @@ class Room
         exit;
     }
 
-    public function addTenantInRoom($room_id, $tenant_id)
+    public function addTenantInRoom($room_id, $tenant_id, $all_tenants)
     {
-        // Check if the tenant is already assigned to another room
-        $stmt = $this->runQuery('SELECT id FROM rooms WHERE user_id = :user_id AND id != :room_id');
-        $stmt->execute(array(
+        // Check if the main tenant is already assigned to another room
+        $stmt = $this->runQuery('SELECT id FROM rooms WHERE FIND_IN_SET(:user_id, user_id) AND id != :room_id');
+        $stmt->execute([
             ":user_id" => $tenant_id,
             ":room_id" => $room_id
-        ));
+        ]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existing) {
@@ -86,20 +86,27 @@ class Room
             exit;
         }
 
-        $stmt = $this->runQuery('UPDATE rooms SET user_id = :user_id , status = :status WHERE id = :id');
-        $exec = $stmt->execute(array(
-            ":user_id" => $tenant_id,
-            ":id" => $room_id,
-            ":status" => 'occupied'
-        ));
+                // 🔹 Get the room_name first
+        $stmt = $this->runQuery('SELECT room_number FROM rooms WHERE id = :id');
+        $stmt->execute([":id" => $room_id]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        $room_name = $room ? $room['room_number'] : "Unknown Room";
+
+        // ✅ Update room with ALL tenants (main + old + new subtenants)
+        $stmt = $this->runQuery('UPDATE rooms SET user_id = :user_id, status = :status WHERE id = :id');
+        $exec = $stmt->execute([
+            ":user_id" => $all_tenants,
+            ":id"      => $room_id,
+            ":status"  => 'occupied'
+        ]);
 
         if ($exec) {
-            $activity = "New Tenant has been added to room (ID: $room_id)";
-            $user_id = $_SESSION['adminSession'];
+            $activity = "Tenant(s) updated in room $room_name";
+            $user_id  = $_SESSION['adminSession'];
             $this->admin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
-            $_SESSION['status'] = 'New Tenant has been added to the room';
+            $_SESSION['status'] = 'Tenant(s) have been added to the room';
             $_SESSION['status_code'] = 'success';
             $_SESSION['status_timer'] = 40000;
         } else {
@@ -171,7 +178,7 @@ class Room
 
         if ($exec) {
             $user_id = $_SESSION['adminSession'];
-            $this->admin->logs($logMsg, $user_id);
+            $this->admin->logs(activity: $logMsg, user_id: $user_id);
 
             $_SESSION['status_title'] = 'Success!';
             $_SESSION['status'] = $logMsg;
@@ -189,20 +196,26 @@ class Room
     }
     public function deleteTenant($room_id)
     {
-        // Remove the user from the room by setting owner_id to NULL
+        // 🔹 Get the room_name first
+        $stmt = $this->runQuery('SELECT room_number FROM rooms WHERE id = :id');
+        $stmt->execute([":id" => $room_id]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        $room_name = $room ? $room['room_number'] : "Unknown Room";
+
+        // 🔹 Update room status and clear user_id
         $stmt = $this->runQuery('UPDATE rooms SET user_id = NULL, status = :status WHERE id = :id');
-        $exec = $stmt->execute(array(
+        $exec = $stmt->execute([
             ":id" => $room_id,
             ":status" => 'vacant'
-        ));
+        ]);
 
         if ($exec) {
-            $activity = "User has been removed from room (ID: $room_id)";
+            $activity = "User has been removed from room: $room_name";
             $user_id = $_SESSION['adminSession'];
             $this->admin->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
-            $_SESSION['status'] = 'User has been removed from the room';
+            $_SESSION['status'] = "User has been removed from $room_name";
             $_SESSION['status_code'] = 'success';
             $_SESSION['status_timer'] = 40000;
         } else {
@@ -213,6 +226,60 @@ class Room
         }
 
         header('Location: ../energy-monitoring');
+        exit;
+    }
+
+    public function deleteSubTenant($room_id, $subtenant_id)
+    {
+        // Get current tenants
+        $stmt = $this->runQuery("SELECT user_id FROM rooms WHERE id = :room_id");
+        $stmt->execute([":room_id" => $room_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            $_SESSION['status_title'] = 'Error!';
+            $_SESSION['status'] = 'Room not found';
+            $_SESSION['status_code'] = 'error';
+            header("Location: ../room-details?id=$room_id");
+            exit;
+        }
+
+        $user_ids = explode(",", $row['user_id']);
+        $user_ids = array_map('trim', $user_ids);
+
+        // Remove the target subtenant
+        $new_ids = array_diff($user_ids, [$subtenant_id]);
+
+        // Rebuild string
+        $updated_user_ids = implode(",", $new_ids);
+
+        $stmt = $this->runQuery('SELECT room_number FROM rooms WHERE id = :id');
+        $stmt->execute([":id" => $room_id]);
+        $room = $stmt->fetch(PDO::FETCH_ASSOC);
+        $room_name = $room ? $room['room_number'] : "Unknown Room";
+
+        // Update DB
+        $stmt = $this->runQuery("UPDATE rooms SET user_id = :user_id WHERE id = :room_id");
+        $exec = $stmt->execute([
+            ":user_id" => $updated_user_ids,
+            ":room_id" => $room_id
+        ]);
+
+        if ($exec) {
+            $activity = "Removed tenant from room $room_name";
+            $user_id  = $_SESSION['adminSession'];
+            $this->admin->logs($activity, $user_id);
+
+            $_SESSION['status_title'] = 'Success!';
+            $_SESSION['status'] = 'SubTenant removed successfully';
+            $_SESSION['status_code'] = 'success';
+        } else {
+            $_SESSION['status_title'] = 'Error!';
+            $_SESSION['status'] = 'Failed to remove tenant';
+            $_SESSION['status_code'] = 'error';
+        }
+
+        header("Location: ../room-details?id=$room_id");
         exit;
     }
 }
@@ -233,12 +300,37 @@ if (isset($_GET['delete_tenant'])) {
     $deleteTenant->deleteTenant($room_id);
 }
 
+if (isset($_GET['delete_sub_tenant'])) {
+    $room_id = $_GET["room_id"];
+    $subtenant_id = $_GET["subtenant_id"];
+
+    $deleteSubTenant = new Room();
+    $deleteSubTenant->deleteSubTenant($room_id, $subtenant_id);
+}
+
 if (isset($_POST['btn-add-tenant'])) {
-    $room_id = trim($_POST['room_id']);
-    $tenant_id = trim($_POST['tenant_id']);
+    $room_id   = trim($_POST['room_id']);
+    $tenant_id = trim($_POST['tenant_id']); // main tenant
+
+    // Existing users (main tenant + old subtenants)
+    $existing_ids = $_POST['existing_user_ids'] ?? [];
+
+    // New subtenants selected in form
+    $new_ids = $_POST['sub_tenant_ids'] ?? [];
+
+    // Merge all together
+    $all_ids = array_unique(array_merge($existing_ids, $new_ids));
+
+    // Make sure the main tenant stays at the front
+    if (!in_array($tenant_id, $all_ids)) {
+        array_unshift($all_ids, $tenant_id);
+    }
+
+    // Convert to CSV string
+    $all_tenants = implode(",", $all_ids);
 
     $addTenantInRoom = new Room();
-    $addTenantInRoom->addTenantInRoom($room_id, $tenant_id);
+    $addTenantInRoom->addTenantInRoom($room_id, $tenant_id, $all_tenants);
 }
 
 if (isset($_POST['btn-add-submeterId'])) {

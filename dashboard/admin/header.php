@@ -46,11 +46,16 @@ $totalUsers = $userStmt->fetch(PDO::FETCH_ASSOC)['total_users'] ?? 0;
 
 // retrieve superadmin access key
 $stmt = $user->runQuery("SELECT * FROM admin_access_keys WHERE admin_id=:uid");
-$stmt->execute(array(":uid" => $_SESSION['adminSession']));
+$stmt->execute([":uid" => $_SESSION['adminSession']]);
 $admin_access_key_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$access_key = $admin_access_key_data['access_key'];
-$accessKeyLastUpdate = $admin_access_key_data['updated_at'];
+if ($admin_access_key_data) {
+    $access_key = $admin_access_key_data['access_key'];
+    $accessKeyLastUpdate = $admin_access_key_data['updated_at'];
+} else {
+    $access_key = null;  // or set a default like ""
+    $accessKeyLastUpdate = null;
+}
 
 // Get total tenants (users)
 $userStmt = $user->runQuery("SELECT COUNT(*) as total_users FROM users WHERE user_type = 2 AND account_status = 'Active' AND access_key = :access_key");
@@ -64,8 +69,13 @@ $totalRooms = $roomStmt->fetch(PDO::FETCH_ASSOC)['total_rooms'] ?? 0;
 
 // retrieve kwh cost
 $stmt = $user->runQuery("SELECT * FROM kwh_cost WHERE admin_id=:uid");
-$stmt->execute(array(":uid" => $_SESSION['adminSession']));
+$stmt->execute([":uid" => $_SESSION['adminSession']]);
 $kwh_cost_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$kwh_cost = $kwh_cost_data['cost'];
-$kwhCostLastUpdate = $kwh_cost_data['updated_at'];
+if ($kwh_cost_data) {
+    $kwh_cost = $kwh_cost_data['cost'];
+    $kwhCostLastUpdate = $kwh_cost_data['updated_at'];
+} else {
+    $kwh_cost = null;  // or default to 0.00
+    $kwhCostLastUpdate = null;
+}

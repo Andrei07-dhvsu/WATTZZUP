@@ -72,3 +72,5 @@ try {
 }
 
 ?>
+
+<!-- */15 * * * * /usr/bin/php /var/www/html/path/to/daily_consumption.php >> /var/log/daily_consumption.log 2>&1 -->

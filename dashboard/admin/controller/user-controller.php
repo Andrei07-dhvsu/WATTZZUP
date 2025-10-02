@@ -43,7 +43,7 @@ public function deleteUser($user_id)
         ]);
 
         // 3. Log activity
-        $activity = "User (ID: $user_id) has been deleted and removed from assigned room(s)";
+        $activity = "User has been deleted and removed from assigned room(s)";
         $admin_id = $_SESSION['adminSession'];
         $this->admin->logs($activity, $admin_id);
 

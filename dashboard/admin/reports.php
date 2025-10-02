@@ -94,7 +94,7 @@ include_once 'header.php';
 
 			function load_data(page, query = '') {
 				$.ajax({
-					url: "tables/sensor-logs-table.php",
+					url: "tables/energy-warning-logs-table.php",
 					method: "POST",
 					data: {
 						page: page,

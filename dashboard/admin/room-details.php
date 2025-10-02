@@ -113,11 +113,17 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                     <a href="controller/room-controller.php?id=<?php echo $room_id ?>&delete_tenant=1" class="delete_tenant"><i class='bx bxs-trash'></i></a>
                                     <button class="btn-dark change" onclick="tenant_profie()"><i class='bx bxs-user'></i> Tenant Profile</button>
                                     <button class="btn-dark change" onclick="submeter()"><i class='bx bxs-tachometer'></i> Electric Meter</button>
+                                    <?php if ($rooms_user_id): ?>
+                                        <button class="btn-dark change" data-bs-toggle="modal" data-bs-target="#addSubTenant"><i class='bx bx-user-plus'></i> Sub Tenant</button>
+                                    <?php endif; ?>
+
                                 </div>
 
                                 <?php if ($rooms_user_id): ?>
                                     <div id="tenant_profile">
-                                        <form action="" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+                                        <form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+                                            <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                                            <input type="hidden" name="tenant_id" value="<?php echo $rooms_user_id; ?>">
                                             <div class="row gx-5 needs-validation">
 
                                                 <label class="form-label" style="text-align: left; padding-top: .5rem; padding-bottom: 1rem; font-size: 1rem; font-weight: bold;">
@@ -155,6 +161,72 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                                 </div>
 
                                             </div>
+
+                                            <label class="form-label" style="text-align: left; padding-top: .5rem; padding-bottom: 1rem; font-size: 1rem; font-weight: bold;">
+                                                <i class='bx bxs-user'></i> Sub Tenant
+                                            </label>
+
+<?php
+$user_ids = $rooms_data['user_id'] ?? '';
+
+$rooms_user_fullnames = [];
+$rooms_user_ids = [];
+
+if (!empty($user_ids)) {
+    // Convert string "1,2,3" → array [1,2,3]
+    $ids = array_map('trim', explode(',', $user_ids));
+
+    // Build placeholders for PDO
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+    // Fetch all users with those IDs
+    $stmt = $user->runQuery("
+        SELECT id, first_name, middle_name, last_name
+        FROM users
+        WHERE id IN ($placeholders)
+    ");
+    $stmt->execute($ids);
+
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $fullname = trim(
+            ($row['last_name'] ? $row['last_name'] . ', ' : '') .
+            $row['first_name'] .
+            ($row['middle_name'] ? ' ' . $row['middle_name'] : '')
+        );
+
+        $rooms_user_fullnames[] = $fullname;
+        $rooms_user_ids[] = $row['id'];
+    }
+}
+
+// ✅ Separate main tenant (first ID) from subtenants
+$main_tenant_name = $rooms_user_fullnames[0] ?? null;
+$main_tenant_id   = $rooms_user_ids[0] ?? null;
+$subtenant_names  = array_slice($rooms_user_fullnames, 1);
+$subtenant_ids    = array_slice($rooms_user_ids, 1);
+?>
+
+<!-- Subtenants -->
+<div class="col-md-12" style="padding: 20px;">
+    <label class="form-label">Subtenants</label>
+    <?php if (!empty($subtenant_names)): ?>
+        <?php foreach ($subtenant_names as $i => $fullname): ?>
+            <div class="input-group mb-2">
+                <input type="text" disabled
+                       class="form-control"
+                       name="subtenant_<?= $i ?>"
+                       value="<?= htmlspecialchars($fullname) ?>">
+
+                <a href="controller/room-controller.php?room_id=<?= $room_id ?>&subtenant_id=<?= $subtenant_ids[$i] ?>&delete_sub_tenant=1"
+                   class="btn btn-danger delete_tenant">
+                    <i class='bx bxs-trash'></i>
+                </a>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <input type="text" disabled class="form-control" value="No subtenants assigned">
+    <?php endif; ?>
+</div>
                                         </form>
                                     </div>
                                 <?php else: ?>
@@ -184,7 +256,7 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                                 </div>
                                                 <div class="col-md-12">
                                                     <label for="kwh_limit" class="form-label">Kwh Limit <span> (per Day)</span></label>
-                                                    <input type="number" class="form-control" autocapitalize="on" autocomplete="off" name="kwh_limit" id="kwh_limit" required value="<?php echo $kwh_limit ; ?>">
+                                                    <input type="number" class="form-control" autocapitalize="on" autocomplete="off" name="kwh_limit" id="kwh_limit" required value="<?php echo $kwh_limit; ?>">
                                                     <div class="invalid-feedback">
                                                         Please provide a Kwh Limit.
                                                     </div>
@@ -310,11 +382,14 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
 
                                                     // Select active tenants who are NOT assigned to any room (or this room)
                                                     $stmt = $user->runQuery("
-                                                        SELECT * FROM users
-                                                        WHERE account_status = :account_status
-                                                        AND user_type = :user_type
-                                                        AND access_key = :access_key AND id NOT IN (
-                                                            SELECT user_id FROM rooms WHERE user_id IS NOT NULL
+                                                        SELECT * FROM users u
+                                                        WHERE u.account_status = :account_status
+                                                        AND u.user_type = :user_type
+                                                        AND u.access_key = :access_key
+                                                        AND NOT EXISTS (
+                                                            SELECT 1 FROM rooms r
+                                                            WHERE r.user_id IS NOT NULL
+                                                            AND FIND_IN_SET(u.id, r.user_id) > 0
                                                         )
                                                     ");
 
@@ -386,6 +461,129 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                     </div>
                 </div>
             </div>
+
+            <div class="class-modal">
+                <div class="modal fade" id="addSubTenant" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="header"></div>
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="classModalLabel"><i class='bx bxs-user-plus'></i> Add SubTenant</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
+                            </div>
+                            <div class="modal-body">
+                                <section class="data-form-modals">
+                                    <div class="registration">
+                                        <form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+                                            <div class="row gx-5 needs-validation">
+                                                <input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+                                                <input type="hidden" name="tenant_id" value="<?php echo $rooms_user_id; ?>">
+                                                <?php foreach ($ids as $id): ?>
+                                                    <input type="hidden" name="existing_user_ids[]" value="<?= $id ?>">
+                                                <?php endforeach; ?>
+
+                                                <div id="tenant_wrapper" style="padding: 20px;">
+                                                    <div class="tenant_row d-flex mb-2">
+                                                        <select class="form-select form-control me-2" name="sub_tenant_ids[]">
+                                                            <option disabled selected value="">Please Select Tenant</option>
+                                                            <?php
+                                                            // Current room ID
+                                                            $current_room_id = $room_id ?? 0;
+
+                                                            // Select active tenants who are NOT assigned to any room (or this room)
+                                                            $stmt = $user->runQuery("
+                                                            SELECT * FROM users u
+                                                            WHERE u.account_status = :account_status
+                                                            AND u.user_type = :user_type
+                                                            AND u.access_key = :access_key
+                                                            AND NOT EXISTS (
+                                                                SELECT 1 FROM rooms r
+                                                                WHERE r.user_id IS NOT NULL
+                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
+                                                            )
+                                                        ");
+                                                            $stmt->execute([
+                                                                ":account_status" => "active",
+                                                                ":user_type" => 2, // tenant
+                                                                ":access_key" => $access_key, // tenant
+                                                            ]);
+
+                                                            while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                                                $fullname = trim(
+                                                                    ($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
+                                                                        $tenant['first_name'] .
+                                                                        ($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
+                                                                );
+                                                            ?>
+                                                                <option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
+                                                            <?php
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                        <button type="button" class="btn btn-danger remove_tenant">-</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Hidden Template -->
+                                                <div id="tenant_template" class="d-none" style="padding: 20px;">
+                                                    <div class="tenant_row d-flex mb-2">
+                                                        <select class="form-select form-control me-2" name="sub_tenant_ids[]">
+                                                            <option disabled selected value="">Please Select Tenant</option>
+                                                            <!-- regenerate same tenant options via PHP -->
+                                                            <?php
+                                                            // Current room ID
+                                                            $current_room_id = $room_id ?? 0;
+
+                                                            // Select active tenants who are NOT assigned to any room (or this room)
+                                                            $stmt = $user->runQuery("
+                                                            SELECT * FROM users u
+                                                            WHERE u.account_status = :account_status
+                                                            AND u.user_type = :user_type
+                                                            AND u.access_key = :access_key
+                                                            AND NOT EXISTS (
+                                                                SELECT 1 FROM rooms r
+                                                                WHERE r.user_id IS NOT NULL
+                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
+                                                            )
+                                                        ");
+
+                                                            $stmt->execute([
+                                                                ":account_status" => "active",
+                                                                ":user_type" => 2, // tenant
+                                                                ":access_key" => $access_key, // tenant
+                                                            ]);
+
+                                                            while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                                                $fullname = trim(
+                                                                    ($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
+                                                                        $tenant['first_name'] .
+                                                                        ($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
+                                                                );
+                                                            ?>
+                                                                <option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
+                                                            <?php
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                        <button type="button" class="btn btn-danger remove_tenant">-</button>
+                                                    </div>
+                                                </div>
+                                                <div class="addTenantBtn">
+                                                    <button type="button" class="btn-success" id="add_tenant" onclick="return IsEmpty(); sexEmpty();"><i class='bx bx-user-plus'></i> Add Field</button>
+                                                </div>
+
+                                            </div>
+                                            <div class="addBtn">
+                                                <button type="submit" class="btn-dark" name="btn-add-tenant" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add Subtenant</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <div id="chartContainer"
@@ -397,9 +595,70 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
 
     <?php echo $footer_dashboard->getFooterDashboard() ?>
     <?php include_once '../../config/sweetalert.php'; ?>
-    <script type="module" src="../../src/js/gauge.js"></script>
     <script type="module" src="../../src/js/submeter_data.js"></script>
     <script type="module" src="../../src/js/tenant_energy_usage_graph.js"></script>
+    <script type="module" src="../../src/js/tenant_energy_cost_graph.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let wrapper = document.getElementById("tenant_wrapper");
+            let addBtn = document.getElementById("add_tenant");
+            let template = document.getElementById("tenant_template").innerHTML;
+
+            // Function to refresh all dropdown options (to avoid duplicates)
+            function refreshTenantOptions() {
+                // Collect all selected tenant IDs
+                let selectedValues = Array.from(wrapper.querySelectorAll("select[name='sub_tenant_ids[]']"))
+                    .map(sel => sel.value)
+                    .filter(val => val !== ""); // ignore empty
+
+                // For each dropdown
+                wrapper.querySelectorAll("select[name='sub_tenant_ids[]']").forEach(select => {
+                    let currentVal = select.value;
+
+                    // Enable all options first
+                    select.querySelectorAll("option").forEach(opt => {
+                        opt.disabled = false;
+                    });
+
+                    // Disable already-selected tenants (except the one currently selected in this dropdown)
+                    selectedValues.forEach(val => {
+                        if (val !== currentVal && val !== "") {
+                            let opt = select.querySelector("option[value='" + val + "']");
+                            if (opt) opt.disabled = true;
+                        }
+                    });
+                });
+            }
+
+            // Add tenant row
+            addBtn.addEventListener("click", function() {
+                let div = document.createElement("div");
+                div.innerHTML = template;
+                div = div.firstElementChild;
+                wrapper.appendChild(div);
+
+                refreshTenantOptions();
+            });
+
+            // Remove tenant row
+            wrapper.addEventListener("click", function(e) {
+                if (e.target.classList.contains("remove_tenant")) {
+                    e.target.closest(".tenant_row").remove();
+                    refreshTenantOptions();
+                }
+            });
+
+            // Listen for change in dropdowns
+            wrapper.addEventListener("change", function(e) {
+                if (e.target.tagName === "SELECT") {
+                    refreshTenantOptions();
+                }
+            });
+
+            // Initial setup
+            refreshTenantOptions();
+        });
+    </script>
 </body>
 
 </html>

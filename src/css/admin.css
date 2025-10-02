@@ -1418,10 +1418,14 @@ border-right-color: var(--main);
 .table>:not(:first-child) {
 	border-top: none;
 }
-#content main .table-data .order .data-table .table h1 {
-	text-align: center;
-	font-size: 1.5rem;
+
+
+#content main .table-data .order .data-table .table .no_room{
+	font-family: 'Open Sans', sans-serif;
+	font-size: 15px;
+	font-weight: 800;
 	padding: 5rem 0;
+
 }
 
 #content main .table-data .order .data-table .pagination{
@@ -1512,6 +1516,7 @@ border-right-color: var(--main);
 	border-radius: 5px;
 	transition: all 0.3s ease;
   }
+
   .class-modal .modal-content .modal-body .col-md-4 {
 	padding-bottom: .9rem;
 	}
@@ -1542,6 +1547,19 @@ border-right-color: var(--main);
 	font-size: 13px;
 	font-weight: bold;
   }
+
+  .class-modal .modal-content .modal-body  .addTenantBtn {
+	padding: 20px;
+}
+
+.class-modal .modal-content .modal-body  .addTenantBtn button {
+	width: 100%;
+	border: none;
+	padding: 8px;
+	border-radius: 7px;
+	
+}
+
   
   .class-modal .modal-content .modal-body .addBtn {
 	border-top: none;
@@ -1961,6 +1979,13 @@ border-right-color: var(--main);
 .gauge_dashboard .room_status .arduino h1{
 	font-family: 'Open Sans', sans-serif;
 	font-size: 50px;
+	font-weight: 800;
+	margin-bottom: 20px;
+}
+
+.gauge_dashboard .room_status .arduino .no_room{
+	font-family: 'Open Sans', sans-serif;
+	font-size: 15px;
 	font-weight: 800;
 	margin-bottom: 20px;
 }

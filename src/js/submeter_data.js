@@ -1,34 +1,40 @@
-        // Example: this comes from your PHP room details page
-        const chartContainer = document.getElementById("chartContainer");
-        const roomSubmeterId = chartContainer.dataset.roomsubmeterId;
+function fetchSubmeterData() {
+    const chartContainer = document.getElementById("chartContainer");
+    if (!chartContainer) return;
 
-        function fetchSubmeterData() {
-            fetch('controller/receive_data.php')
-                .then(response => response.json())
-                .then(data => {
-                    // Find the submeter data that matches the room's submeter_id
-                    const submeter = data.find(item => item.submeterId === roomSubmeterId);
+    const roomSubmeterId = chartContainer.dataset.roomsubmeterId;
 
-                    if (submeter) {
-                        document.getElementById('voltage').innerText = submeter.voltage + " V";
-                        document.getElementById('current').innerText = submeter.current + " A";
-                        document.getElementById('power').innerText = submeter.power + " W";
-                        document.getElementById('energyKWh').innerText = submeter.energyKWh + " kWh";
-                        document.getElementById('frequency').innerText = submeter.frequency + " Hz";
-                        document.getElementById('powerFactor').innerText = submeter.powerFactor;
-                    } else {
-                        // Handle offline / missing submeter
-                        document.getElementById('voltage').innerText = "0 V";
-                        document.getElementById('current').innerText = "0 A";
-                        document.getElementById('power').innerText = "0 W";
-                        document.getElementById('energyKWh').innerText = "0 kWh";
-                        document.getElementById('frequency').innerText = "0 Hz";
-                        document.getElementById('powerFactor').innerText = "0";
-                    }
-                })
-                .catch(error => console.error('Error fetching submeter data:', error));
-        }
+    fetch('controller/receive_data.php')
+        .then(response => response.json())
+        .then(data => {
+            const submeter = data.find(item => item.submeterId === roomSubmeterId);
 
-        // Refresh every 5 seconds
-        setInterval(fetchSubmeterData, 1000);
-        fetchSubmeterData();
+            const voltageEl = document.getElementById('voltage');
+            const currentEl = document.getElementById('current');
+            const powerEl = document.getElementById('power');
+            const energyEl = document.getElementById('energyKWh');
+            const freqEl = document.getElementById('frequency');
+            const pfEl = document.getElementById('powerFactor');
+
+            if (submeter) {
+                if (voltageEl) voltageEl.innerText = submeter.voltage + " V";
+                if (currentEl) currentEl.innerText = submeter.current + " A";
+                if (powerEl) powerEl.innerText = submeter.power + " W";
+                if (energyEl) energyEl.innerText = submeter.energyKWh + " kWh";
+                if (freqEl) freqEl.innerText = submeter.frequency + " Hz";
+                if (pfEl) pfEl.innerText = submeter.powerFactor;
+            } else {
+                if (voltageEl) voltageEl.innerText = "0 V";
+                if (currentEl) currentEl.innerText = "0 A";
+                if (powerEl) powerEl.innerText = "0 W";
+                if (energyEl) energyEl.innerText = "0 kWh";
+                if (freqEl) freqEl.innerText = "0 Hz";
+                if (pfEl) pfEl.innerText = "0";
+            }
+        })
+        .catch(error => console.error('Error fetching submeter data:', error));
+}
+
+// Refresh every 1 second
+setInterval(fetchSubmeterData, 1000);
+fetchSubmeterData();

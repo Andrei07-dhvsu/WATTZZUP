@@ -13,7 +13,14 @@ $stmt = $user->runQuery("SELECT * FROM admin_access_keys WHERE admin_id = :uid")
 $stmt->execute([":uid" => $_SESSION['adminSession']]);
 $admin_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$access_key = $admin_data['access_key'];
+if ($admin_data) {
+    $access_key = $admin_data['access_key'];
+    $accessKeyLastUpdate = $admin_data['updated_at'];
+} else {
+    $access_key = null;  // or set a default like ""
+    $accessKeyLastUpdate = null;
+}
+
 
 // Use the runQuery method to prepare and execute queries.
 function get_total_row($user, $access_key)
@@ -116,7 +123,7 @@ if($total_data > 0)
 }
 else
 {
-    echo '<h1>No data found</h1>';
+    echo '<h1 class="no_room">No data found</h1>';
 }
 
 $output .= '</table>';

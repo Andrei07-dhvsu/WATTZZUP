@@ -1,7 +1,7 @@
 /* ---------- helper: fetch/load ---------- */
-async function loadData(submeterId, type, year, month) {
+async function loadData(type, year, month) {
     // Build URL safely
-    let url = `controller/get_usage.php?submeter_id=${encodeURIComponent(submeterId)}&type=${encodeURIComponent(type)}`;
+    let url = `controller/whole_get_usage.php?type=${encodeURIComponent(type)}`;
     if (year !== undefined && year !== null && year !== '') {
         url += `&year=${encodeURIComponent(year)}`;
     }
@@ -10,13 +10,9 @@ async function loadData(submeterId, type, year, month) {
         url += `&month=${encodeURIComponent(month)}`;
     }
 
-    // Debug: you can uncomment the next line
-    // console.log("Fetching URL:", urlR);
-
     const resp = await fetch(url);
     const text = await resp.text();
 
-    // Try parse JSON and handle errors gracefully
     try {
         const data = JSON.parse(text);
         if (!Array.isArray(data)) return [];
@@ -32,10 +28,9 @@ async function loadData(submeterId, type, year, month) {
 
 /* ---------- UI init ---------- */
 const chartContainer = document.getElementById("chartContainer");
-let currentSubmeterId = chartContainer.dataset.roomsubmeterId;// change if needed
-let currentType = "daily";
+let currentType = "daily"; // no submeterId needed anymore
 
-am5.ready(async function () {
+am5.ready(async function() {
     // Populate month/year selects
     const monthSelect = document.getElementById("monthSelect");
     const yearSelect = document.getElementById("yearSelect");
@@ -69,12 +64,8 @@ am5.ready(async function () {
     var root = am5.Root.new("usage_estimate_tenant");
 
     const myTheme = am5.Theme.new(root);
-    myTheme.rule("AxisLabel", ["minor"]).setAll({
-        dy: 1
-    });
-    myTheme.rule("Grid", ["minor"]).setAll({
-        strokeOpacity: 0.08
-    });
+    myTheme.rule("AxisLabel", ["minor"]).setAll({ dy: 1 });
+    myTheme.rule("Grid", ["minor"]).setAll({ strokeOpacity: 0.08 });
 
     root.setThemes([am5themes_Animated.new(root), myTheme]);
 
@@ -87,18 +78,13 @@ am5.ready(async function () {
     }));
 
     // Cursor
-    var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {
-        behavior: "none"
-    }));
+    var cursor = chart.set("cursor", am5xy.XYCursor.new(root, { behavior: "none" }));
     cursor.lineY.set("visible", false);
     cursor.lineX.set("visible", true);
 
     // X Axis
     var xAxis = chart.xAxes.push(am5xy.DateAxis.new(root, {
-        baseInterval: {
-            timeUnit: "day",
-            count: 1
-        },
+        baseInterval: { timeUnit: "day", count: 1 },
         renderer: am5xy.AxisRendererX.new(root, {
             minorGridEnabled: true,
             minGridDistance: 80,
@@ -107,10 +93,7 @@ am5.ready(async function () {
         tooltip: am5.Tooltip.new(root, {})
     }));
     if (xAxis.get("tooltip")) xAxis.get("tooltip").set("visible", false);
-    xAxis.set("minorDateFormats", {
-        day: "dd",
-        month: "MM"
-    });
+    xAxis.set("minorDateFormats", { day: "dd", month: "MM" });
 
     // Y Axis
     var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
@@ -128,12 +111,10 @@ am5.ready(async function () {
             labelText: "{valueY.formatNumber('#,###.###')} kWh"
         })
     }));
-    series.strokes.template.setAll({
-        strokeWidth: 2
-    });
+    series.strokes.template.setAll({ strokeWidth: 2 });
 
-    // Bullets (tooltips on hover)
-    series.bullets.push(function (root, series, dataItem) {
+    // Bullets (points)
+    series.bullets.push(function(root, series, dataItem) {
         var circle = am5.Circle.new(root, {
             radius: 5,
             fill: series.get("fill"),
@@ -141,18 +122,12 @@ am5.ready(async function () {
             strokeWidth: 1,
             tooltipText: "{valueY.formatNumber('#,###.###')} kWh"
         });
-        circle.states.create("hover", {
-            scale: 1.6
-        });
-        return am5.Bullet.new(root, {
-            sprite: circle
-        });
+        circle.states.create("hover", { scale: 1.6 });
+        return am5.Bullet.new(root, { sprite: circle });
     });
 
     // Scrollbar
-    const scrollbarX = am5.Scrollbar.new(root, {
-        orientation: "horizontal"
-    });
+    const scrollbarX = am5.Scrollbar.new(root, { orientation: "horizontal" });
     scrollbarX.set("marginBottom", 50);
     chart.set("scrollbarX", scrollbarX);
 
@@ -166,29 +141,25 @@ am5.ready(async function () {
         visible: true
     }));
 
-    // Helper to load and set series, apply limits and empty handling
+    // Helper to load and set series
     async function setSeriesData(type) {
         const yearVal = yearSelect.value;
         const monthVal = (type === 'monthly') ? null : monthSelect.value;
 
-        // Load
-        const items = await loadData(currentSubmeterId, type, yearVal, monthVal);
+        const items = await loadData(type, yearVal, monthVal);
 
         if (!items || items.length === 0) {
-            chart.set("visible", false); // hide chart
-            noDataLabel.set("visible", true); // show message
+            chart.set("visible", false);
+            noDataLabel.set("visible", true);
             series.data.setAll([]);
             return;
         } else {
-            chart.set("visible", true); // show chart
-            noDataLabel.set("visible", false); // hide message
+            chart.set("visible", true);
+            noDataLabel.set("visible", false);
         }
 
-
-        // Limit points according to type (most recent within selection)
-        let final = items.slice(); // items are already ordered ASC by backend
+        let final = items.slice();
         if (type === 'daily') {
-            // keep last 31 days within selected month (if more)
             final = final.slice(-31);
         } else if (type === 'weekly') {
             final = final.slice(-5);
@@ -201,19 +172,14 @@ am5.ready(async function () {
         chart.appear(600, 100);
     }
 
-    // Button handlers + monthSelect/disabled behavior + active styling
-    // Button handlers + monthSelect/disabled behavior + active styling
+    // Buttons
     const buttons = ["dailyBtn", "weeklyBtn", "monthlyBtn"];
-
     buttons.forEach(id => {
         const btn = document.getElementById(id);
-        btn.addEventListener("click", async function () {
-            // Remove active from all buttons
+        btn.addEventListener("click", async function() {
             buttons.forEach(bid => document.getElementById(bid).classList.remove("active"));
-            // Add active to clicked button
             btn.classList.add("active");
 
-            // Set chart type & axis interval
             if (id === "dailyBtn") {
                 currentType = "daily";
                 xAxis.set("baseInterval", { timeUnit: "day", count: 1 });
@@ -227,23 +193,18 @@ am5.ready(async function () {
             } else if (id === "monthlyBtn") {
                 currentType = "monthly";
                 xAxis.set("baseInterval", { timeUnit: "month", count: 1 });
-                monthSelect.disabled = true; // only year for monthly
+                monthSelect.disabled = true;
                 await setSeriesData("monthly");
             }
         });
     });
 
-    // --- Set default active button to Daily ---
-    const dailyBtn = document.getElementById("dailyBtn");
-    dailyBtn.classList.add("active");
-    monthSelect.disabled = false;
-    setSeriesData("daily"); // initial load
-
-    // react on change
-    monthSelect.addEventListener("change", () => setSeriesData(currentType));
-    yearSelect.addEventListener("change", () => setSeriesData(currentType));
-
-    // initial load (daily)
+    // Default = daily
+    document.getElementById("dailyBtn").classList.add("active");
     monthSelect.disabled = false;
     await setSeriesData("daily");
+
+    // React on change
+    monthSelect.addEventListener("change", () => setSeriesData(currentType));
+    yearSelect.addEventListener("change", () => setSeriesData(currentType));
 });

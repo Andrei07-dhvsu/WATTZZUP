@@ -102,7 +102,7 @@ include_once 'header.php';
 						} else {
 							?>
 							<div class="card arduino">
-								<h1>No Rooms Found</h1>
+								<h1 class="no_room">No Rooms Found</h1>
 							</div>
 						<?php
 						}
@@ -152,7 +152,6 @@ include_once 'header.php';
 
 	<?php echo $footer_dashboard->getFooterDashboard() ?>
 	<?php include_once '../../config/sweetalert.php'; ?>
-	<script src="../../src/js/gauge.js"></script>
 	<script>
 		function setSessionValues(roomId) {
 			fetch('room-details.php', {

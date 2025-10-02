@@ -393,25 +393,24 @@ function previewImage(event) {
 	reader.readAsDataURL(input.files[0]);
 }
 
-//clear modal iput fields
+// //clear modal iput fields original
+// document.addEventListener('DOMContentLoaded', function () {
+// 	const closeButton = document.getElementById('closeButton');
+// 	const form = document.querySelector('.needs-validation');
+
+// 	closeButton.addEventListener('click', function () {
+// 		form.reset(); // Reset the form fields
+// 	});
+// });
+
+// //clear modal iput fields new
 document.addEventListener('DOMContentLoaded', function () {
-	const closeButton = document.getElementById('closeButton');
-	const form = document.querySelector('.needs-validation');
+    const closeButton = document.getElementById('closeButton');
+    const form = document.querySelector('.needs-validation');
 
-	closeButton.addEventListener('click', function () {
-		form.reset(); // Reset the form fields
-	});
-});
-
-//This JavaScript code will set the min attribute of the input element with the id event_date to the current date. Users won't be able to select a date earlier than the present day.
-document.addEventListener('DOMContentLoaded', function () {
-	const eventDateInput = document.getElementById('event_date');
-	const today = new Date();
-	today.setDate(today.getDate() + 1); // Set the date to tomorrow
-	const yyyy = today.getFullYear();
-	const mm = String(today.getMonth() + 1).padStart(2, '0'); // Adding 1 because months are 0-indexed
-	const dd = String(today.getDate()).padStart(2, '0');
-
-	// Set the minimum date to tomorrow
-	eventDateInput.min = `${yyyy}-${mm}-${dd}`;
+    if (closeButton && form) { // Make sure both exist
+        closeButton.addEventListener('click', function () {
+            form.reset(); // Reset the form fields
+        });
+    }
 });

@@ -1,17 +1,16 @@
 <table class="table table-bordered table-hover">
 <?php
-
 require_once '../authentication/admin-class.php';
 
 $user = new ADMIN();
-if(!$user->isUserLoggedIn())
-{
- $user->redirect('../../../private/admin/');
+if(!$user->isUserLoggedIn()){
+    $user->redirect('../../../private/admin/');
 }
 
-// Use the runQuery method to prepare and execute queries.
-function get_total_row($user)
-{
+$admin_id = $_SESSION['adminSession']; // logged-in admin id
+
+// Get total row count (for pagination info only)
+function get_total_row($user) {
     $pdoQuery = "SELECT COUNT(*) as total_rows FROM logs";
     $pdoResult = $user->runQuery($pdoQuery);
     $pdoResult->execute();
@@ -20,50 +19,60 @@ function get_total_row($user)
 }
 
 $total_record = get_total_row($user);
-$limit = '20';
-$page = 1;
-if(isset($_POST['page']))
-{
-    $start = (($_POST['page'] - 1) * $limit);
-    $page = $_POST['page'];
-}
-else
-{
-    $start = 0;
-}
+$limit = 20;
+$page  = isset($_POST['page']) ? (int)$_POST['page'] : 1;
+$start = ($page - 1) * $limit;
 
-$query = "SELECT logs.*, users.email FROM logs 
-          INNER JOIN users ON logs.user_id = users.id";
+// 🔹 Build main query
+// 1. logs of admin
+// 2. logs of users linked via admin_access_key
+$query = "
+    SELECT logs.*, users.email 
+    FROM logs 
+    INNER JOIN users ON logs.user_id = users.id
+    WHERE logs.user_id = :admin_id
+       OR logs.user_id IN (
+            SELECT u.id 
+            FROM users u
+            INNER JOIN admin_access_keys aak ON u.access_key = aak.access_key
+            WHERE aak.admin_id = :admin_id
+       )
+";
 
-$output = '';
-if($_POST['query'] != '') {
-    // Prepare the search term
+// 🔎 Add search filter
+if(!empty($_POST['query'])) {
     $search_term = $_POST['query'];
-    $formatted_date = date("F j, Y", strtotime($search_term)); // Convert the search term to date format
+    $formatted_date = date("F j, Y", strtotime($search_term));
 
-    // Modify the query to search by email, activity, or formatted created_at date
-    $query .= ' WHERE users.email LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR logs.activity LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR DATE_FORMAT(logs.created_at, "%M %e, %Y") LIKE "%'.str_replace(' ', '%', $formatted_date).'%"';
+    $query .= ' AND (
+        users.email LIKE :search 
+        OR logs.activity LIKE :search 
+        OR DATE_FORMAT(logs.created_at, "%M %e, %Y") LIKE :search
+    )';
 }
 
-$query .= ' ORDER BY id DESC ';
+$query .= " ORDER BY logs.id DESC ";
 
-$filter_query = $query . ' LIMIT '.$start.', '.$limit.'';
+// Pagination
+$filter_query = $query . " LIMIT $start, $limit";
 
-// Use the runQuery method to prepare and execute the query.
+// Count total filtered
 $statement = $user->runQuery($query);
-$statement->execute();
+$params = [":admin_id" => $admin_id];
+if(!empty($_POST['query'])) {
+    $params[":search"] = "%" . str_replace(' ', '%', $_POST['query']) . "%";
+}
+$statement->execute($params);
 $total_data = $statement->rowCount();
 
-// Use the runQuery method to prepare and execute the filtered query.
+// Get filtered data
 $statement = $user->runQuery($filter_query);
-$statement->execute();
+$statement->execute($params);
 $total_filter_data = $statement->rowCount();
 
-if($total_data > 0)
-{
-    $output = '
+$output = '';
+if($total_data > 0){
+    $output .= '
         <div class="row-count">
             Showing ' . ($start + 1) . ' to ' . min($start + $limit, $total_data) . ' of ' . $total_record . ' entries
         </div>
@@ -75,28 +84,17 @@ if($total_data > 0)
         </thead>
     ';
 
-    while($row = $statement->fetch(PDO::FETCH_ASSOC))
-    {
-        $user_id = $row["user_id"];
-
-        $pdoQuery = "SELECT * FROM users WHERE id = :id";
-        $pdoResult = $user->runQuery($pdoQuery);
-        $pdoResult->execute(array(":id" => $user_id));
-        $user_data = $pdoResult->fetch(PDO::FETCH_ASSOC);
-
+    while($row = $statement->fetch(PDO::FETCH_ASSOC)){
         $output .= '
         <tr>
             <td>'.$row["id"].'</td>
-            <td>'.$user_data["email"].'</td>
+            <td>'.$row["email"].'</td>
             <td>'.$row["activity"].'</td>
             <td>'.date("F j, Y (h:i A)", strtotime($row['created_at'])).'</td>
-            </tr>
-        ';
+        </tr>';
     }
-}
-else
-{
-    echo '<h1>No data found</h1>';
+} else {
+    $output .= '<h1 class="no_room">No data found</h1>';
 }
 
 $output .= '</table>';

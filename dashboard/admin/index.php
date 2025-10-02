@@ -74,12 +74,6 @@ include_once 'header.php';
 							</div>
 						</div>
 						<div class="card arduino">
-							<h1>🎵 Total Frequency</h1>
-							<div class="sensor-data">
-								<span id="frequency">0.0</span>
-							</div>
-						</div>
-						<div class="card arduino">
 							<h1>📐 Total Power Factor</h1>
 							<div class="sensor-data">
 								<span id="powerFactor">0.0</span>
@@ -99,16 +93,39 @@ include_once 'header.php';
 							</div>
 						</div>
 					</div>
-					<div class="gauge">
-						<div class="card gauge_card">
-							<p class="card-title">Energy Cost Graph</p>
-							<div id="S1"></div>
-						</div>
-						<div class="card gauge_card">
-							<p class="card-title">Usage Estimate</p>
-							<div id="S2"></div>
-						</div>
-					</div>
+                        <div class="gauge">
+                            <div class="card gauge_card">
+                                <div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+                                    <div class="d-flex align-items-center">
+                                        <label for="yearSelectCost" class="me-2 mb-0">Year:</label>
+                                        <select id="yearSelectCost" class="form-select form-select-sm"></select>
+                                    </div>
+                                </div>
+
+                                <p class="card-title">Energy Cost Graph</p>
+                                <div id="S1"></div>
+                            </div>
+                            <div class="card gauge_card">
+                                <p class="card-title">Usage Estimate</p>
+                                <div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+                                    <button id="dailyBtn" class="chart-btn">Daily</button>
+                                    <button id="weeklyBtn" class="chart-btn">Weekly</button>
+                                    <button id="monthlyBtn" class="chart-btn">Monthly</button>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+                                    <div class="d-flex align-items-center">
+                                        <label for="monthSelect" class="me-2 mb-0">Month:</label>
+                                        <select id="monthSelect" class="form-select form-select-sm"></select>
+                                    </div>
+
+                                    <div class="d-flex align-items-center">
+                                        <label for="yearSelect" class="me-2 mb-0">Year:</label>
+                                        <select id="yearSelect" class="form-select form-select-sm"></select>
+                                    </div>
+                                </div>
+                                <div id="usage_estimate_tenant"></div>
+                            </div>
+                        </div>
 				</div>
 			</ul>
 		</main>
@@ -118,7 +135,8 @@ include_once 'header.php';
 
 	<?php echo $footer_dashboard->getFooterDashboard() ?>
 	<?php include_once '../../config/sweetalert.php'; ?>
-	<script src="../../src/js/gauge.js"></script>
+	<script type="module" src="../../src/js/energy_cost_graph.js"></script>
+	<script type="module" src="../../src/js/energy_usage_graph.js"></script>
 
 	<script>
 		async function updateTotals() {
