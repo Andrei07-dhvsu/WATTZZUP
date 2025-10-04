@@ -27,9 +27,9 @@ class Database
             } else {
                 // Live server connection
                 $this->host = "localhost";
-                $this->db_name = "u607408406_smart2025";
-                $this->username = "u607408406_smart2025";
-                $this->password = "?|]1h1q5G";
+                $this->db_name = "u607408406_wattzzup";
+                $this->username = "u607408406_wattzzup";
+                $this->password = "Wattzzup2025@";
             }
         }
     }

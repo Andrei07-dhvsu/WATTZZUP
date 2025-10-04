@@ -142,7 +142,7 @@ class MainUrl {
     public function __construct() {
 
         if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_ADDR'] === '127.0.0.1' || $_SERVER['SERVER_ADDR'] === '192.168.1.72') {
-            $this->url = "http://localhost/SMART-ENERGY-MANAGEMENT"; // localhost
+            $this->url = "http://localhost/WATTZZUP"; // localhost
         }else{
             $this->url = "https://enersense.space"; // webhost
 
