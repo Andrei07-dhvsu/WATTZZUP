@@ -144,7 +144,7 @@ class MainUrl {
         if ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_ADDR'] === '127.0.0.1' || $_SERVER['SERVER_ADDR'] === '192.168.1.72') {
             $this->url = "http://localhost/SMART-ENERGY-MANAGEMENT"; // localhost
         }else{
-            $this->url = "https://servify.cloud"; // webhost
+            $this->url = "https://enersense.space"; // webhost
 
         }
     }
@@ -164,7 +164,7 @@ class ProxyServerUrl {
 
     public function __construct() {
         // Fixed proxy server URL
-        $this->proxyUrl = "https://enersense.space/connect.php";
+        $this->proxyUrl = "https://enersense.space/submeter_data.php";
     }
 
     public function getUrl() {
