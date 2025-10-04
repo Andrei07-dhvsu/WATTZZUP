@@ -166,67 +166,67 @@ $rooms_user_email        = $rooms_user_data['email'] ?? '';
                                                 <i class='bx bxs-user'></i> Sub Tenant
                                             </label>
 
-<?php
-$user_ids = $rooms_data['user_id'] ?? '';
+                                            <?php
+                                            $user_ids = $rooms_data['user_id'] ?? '';
 
-$rooms_user_fullnames = [];
-$rooms_user_ids = [];
+                                            $rooms_user_fullnames = [];
+                                            $rooms_user_ids = [];
 
-if (!empty($user_ids)) {
-    // Convert string "1,2,3" → array [1,2,3]
-    $ids = array_map('trim', explode(',', $user_ids));
+                                            if (!empty($user_ids)) {
+                                                // Convert string "1,2,3" → array [1,2,3]
+                                                $ids = array_map('trim', explode(',', $user_ids));
 
-    // Build placeholders for PDO
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                                                // Build placeholders for PDO
+                                                $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-    // Fetch all users with those IDs
-    $stmt = $user->runQuery("
-        SELECT id, first_name, middle_name, last_name
-        FROM users
-        WHERE id IN ($placeholders)
-    ");
-    $stmt->execute($ids);
+                                                // Fetch all users with those IDs
+                                                $stmt = $user->runQuery("
+                                                    SELECT id, first_name, middle_name, last_name
+                                                    FROM users
+                                                    WHERE id IN ($placeholders)
+                                                ");
+                                                $stmt->execute($ids);
 
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-        $fullname = trim(
-            ($row['last_name'] ? $row['last_name'] . ', ' : '') .
-            $row['first_name'] .
-            ($row['middle_name'] ? ' ' . $row['middle_name'] : '')
-        );
+                                                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                                    $fullname = trim(
+                                                        ($row['last_name'] ? $row['last_name'] . ', ' : '') .
+                                                            $row['first_name'] .
+                                                            ($row['middle_name'] ? ' ' . $row['middle_name'] : '')
+                                                    );
 
-        $rooms_user_fullnames[] = $fullname;
-        $rooms_user_ids[] = $row['id'];
-    }
-}
+                                                    $rooms_user_fullnames[] = $fullname;
+                                                    $rooms_user_ids[] = $row['id'];
+                                                }
+                                            }
 
-// ✅ Separate main tenant (first ID) from subtenants
-$main_tenant_name = $rooms_user_fullnames[0] ?? null;
-$main_tenant_id   = $rooms_user_ids[0] ?? null;
-$subtenant_names  = array_slice($rooms_user_fullnames, 1);
-$subtenant_ids    = array_slice($rooms_user_ids, 1);
-?>
+                                            // ✅ Separate main tenant (first ID) from subtenants
+                                            $main_tenant_name = $rooms_user_fullnames[0] ?? null;
+                                            $main_tenant_id   = $rooms_user_ids[0] ?? null;
+                                            $subtenant_names  = array_slice($rooms_user_fullnames, 1);
+                                            $subtenant_ids    = array_slice($rooms_user_ids, 1);
+                                            ?>
 
-<!-- Subtenants -->
-<div class="col-md-12" style="padding: 20px;">
-    <label class="form-label">Subtenants</label>
-    <?php if (!empty($subtenant_names)): ?>
-        <?php foreach ($subtenant_names as $i => $fullname): ?>
-            <div class="input-group mb-2">
-                <input type="text" disabled
-                       class="form-control"
-                       name="subtenant_<?= $i ?>"
-                       value="<?= htmlspecialchars($fullname) ?>">
+                                            <!-- Subtenants -->
+                                            <div class="col-md-12" style="padding: 20px;">
+                                                <label class="form-label">Subtenants</label>
+                                                <?php if (!empty($subtenant_names)): ?>
+                                                    <?php foreach ($subtenant_names as $i => $fullname): ?>
+                                                        <div class="input-group mb-2">
+                                                            <input type="text" disabled
+                                                                class="form-control"
+                                                                name="subtenant_<?= $i ?>"
+                                                                value="<?= htmlspecialchars($fullname) ?>">
 
-                <a href="controller/room-controller.php?room_id=<?= $room_id ?>&subtenant_id=<?= $subtenant_ids[$i] ?>&delete_sub_tenant=1"
-                   class="btn btn-danger delete_tenant">
-                    <i class='bx bxs-trash'></i>
-                </a>
-            </div>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <input type="text" disabled class="form-control" value="No subtenants assigned">
-    <?php endif; ?>
-</div>
+                                                            <a href="controller/room-controller.php?room_id=<?= $room_id ?>&subtenant_id=<?= $subtenant_ids[$i] ?>&delete_sub_tenant=1"
+                                                                class="btn btn-danger delete_tenant">
+                                                                <i class='bx bxs-trash'></i>
+                                                            </a>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <input type="text" disabled class="form-control" value="No subtenants assigned">
+                                                <?php endif; ?>
+                                            </div>
                                         </form>
                                     </div>
                                 <?php else: ?>

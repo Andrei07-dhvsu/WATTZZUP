@@ -1,25 +1,79 @@
 <?php
 include_once 'header.php';
+
+$currentUserId = $_SESSION['userSession'] ?? '';
+
+// ✅ Get logged-in user’s data + associated room data
+$stmt = $user->runQuery("
+    SELECT 
+        u.id AS user_id,
+        u.profile,
+        u.first_name,
+        u.middle_name,
+        u.last_name,
+        u.sex,
+        u.date_of_birth,
+        u.age,
+        u.civil_status,
+        u.phone_number,
+        u.email,
+        r.id AS room_id,
+		r.owner_id,
+        r.room_number,
+        r.submeter_id,
+        r.kwh_limit,
+        r.status AS room_status,
+        r.updated_at AS room_last_update
+    FROM users u
+    INNER JOIN rooms r ON FIND_IN_SET(u.id, r.user_id)
+    WHERE u.id = :user_id
+      AND u.account_status = 'Active'
+    LIMIT 1
+");
+$stmt->execute([':user_id' => $currentUserId]);
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// ✅ Assign user data
+$rooms_user_id           = $data['user_id'] ?? '';
+$rooms_user_profile      = $data['profile'] ?? '';
+$rooms_user_fname        = $data['first_name'] ?? '';
+$rooms_user_mname        = $data['middle_name'] ?? '';
+$rooms_user_lname        = $data['last_name'] ?? '';
+$rooms_user_fullname     = trim(($rooms_user_lname ? $rooms_user_lname . ', ' : '') . $rooms_user_fname);
+$rooms_user_sex          = $data['sex'] ?? '';
+$rooms_user_birth_date   = $data['date_of_birth'] ?? '';
+$rooms_user_age          = $data['age'] ?? '';
+$rooms_user_civil_status = $data['civil_status'] ?? '';
+$rooms_user_phone_number = $data['phone_number'] ?? '';
+$rooms_user_email        = $data['email'] ?? '';
+
+// ✅ Assign room data
+$room_id           = $data['room_id'] ?? '';
+$room_owner_id	 	= $data['owner_id'];	
+$room_number       = $data['room_number'] ?? '';
+$submeter_id       = $data['submeter_id'] ?? '';
+$kwh_limit         = $data['kwh_limit'] ?? '';
+$room_status       = $data['room_status'] ?? '';
+$rooms_last_update = $data['room_last_update'] ?? '';
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 	<?php echo $header_dashboard->getHeaderDashboard() ?>
 	<link href='https://fonts.googleapis.com/css?family=Antonio' rel='stylesheet'>
-	<title>Dashboard</title>
+	<title>Room Details</title>
 </head>
 
 <body>
-
 	<!-- Loader -->
 	<div class="loader"></div>
 
 	<!-- SIDEBAR -->
 	<?php echo $sidebar->getSideBar(); ?> <!-- This will render the sidebar -->
 	<!-- SIDEBAR -->
-
-
 
 	<!-- CONTENT -->
 	<section id="content">
@@ -39,7 +93,6 @@ include_once 'header.php';
 			</a>
 		</nav>
 		<!-- NAVBAR -->
-
 		<!-- MAIN -->
 		<main>
 			<div class="head-title">
@@ -51,239 +104,335 @@ include_once 'header.php';
 						</li>
 						<li>|</li>
 						<li>
-							<a href="">Dashboard</a>
+							<a href=""><?php echo $room_owner_id?>
+</a>
 						</li>
 					</ul>
 				</div>
 			</div>
-
 			</div>
 			<ul class="dashboard_data">
 				<div class="gauge_dashboard">
-					<div class="status">
-						<div class="card arduino">
-							<h1>DEVICE STATUS</h1>
-							<div class="sensor-data">
-								<span id="wifi_status">Loading...</span>
+					<?php if ($submeter_id): ?>
+						<div class="status">
+							<div class="card arduino">
+								<h1>⚡ Total Voltage</h1>
+								<div class="sensor-data">
+									<span id="voltage">Loading....</span>
+								</div>
+							</div>
+							<div class="card arduino">
+								<h1>🔌 Total Current</h1>
+								<div class="sensor-data">
+									<span id="current">Loading....</span>
+								</div>
+							</div>
+							<div class="card arduino">
+								<h1>🔌 Total Power</h1>
+								<div class="sensor-data">
+									<span id="power">Loading....</span>
+								</div>
+							</div>
+							<div class="card arduino">
+								<h1>🔋 Total Energy Consumption</h1>
+								<div class="sensor-data">
+									<span id="energyKWh">Loading....</span>
+								</div>
+							</div>
+							<div class="card arduino">
+								<h1>🎵 Total Frequency</h1>
+								<div class="sensor-data">
+									<span id="frequency">Loading....</span>
+								</div>
+							</div>
+							<div class="card arduino">
+								<h1>📐 Total Power Factor</h1>
+								<div class="sensor-data">
+									<span id="powerFactor">Loading....</span>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="status">
-						<div class="card arduino">
-							<h1>WATER SENSOR STATUS</h1>
-							<div class="sensor-data">
-								<span id="waterStatus">Loading...</span>
-							</div>
-						</div>
-						<div class="card arduino">
-							<h1>PUMP SENSOR STATUS</h1>
-							<div class="sensor-data">
-								<span id="pumpStatus">Loading...</span>
-							</div>
-						</div>
-					</div>
-					<div class="status">
-						<div class="card arduino">
-							<h1>VALVE SENSOR 1 STATUS</h1>
-							<div class="sensor-data">
-								<span id="valve1Status">Loading...</span>
-							</div>
-						</div>
-						<div class="card arduino">
-							<h1>VALVE SENSOR 2 STATUS</h1>
-							<div class="sensor-data">
-								<span id="valve2Status">Loading...</span>
-							</div>
-						</div>
-					</div>
-					<!-- <div class="status">
-						<div class="card arduino">
-							<h1>SOIL SENSOR 1 STATUS</h1>
-							<div class="sensor-data">
-								<span id="soilMoisture1">Loading...</span>
-							</div>
-						</div>
-						<div class="card arduino">
-							<h1>SOIL SENSOR 2 STATUS</h1>
-							<div class="sensor-data">
-								<span id="soilMoisture2">Loading...</span>
-							</div>
-						</div>
-					</div>
-					<div class="status">
-						<div class="card arduino">
-							<h1>HUMIDITY</h1>
-							<div class="sensor-data">
-								<span id="humidity">Loading...</span>
-							</div>
-						</div>
-						<div class="card arduino">
-							<h1>TEMPERATURE</h1>
-							<div class="sensor-data">
-								<span id="temperature">Loading...</span>
-							</div>
-						</div>
-					</div> -->
+						<div class="gauge">
+							<div class="card gauge_card">
+								<div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+									<div class="d-flex align-items-center">
+										<label for="yearSelectCost" class="me-2 mb-0">Year:</label>
+										<select id="yearSelectCost" class="form-select form-select-sm"></select>
+									</div>
+								</div>
 
-					<div class="gauge">
-						<div class="card gauge_card">
-							<p class="card-title">SOIL SENSOR 1</p>
-							<div id="SoilSensor1"></div>
+								<p class="card-title">Energy Cost Graph</p>
+								<div id="S1"></div>
+							</div>
+							<div class="card gauge_card">
+								<p class="card-title">Usage Estimate</p>
+								<div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+									<button id="dailyBtn" class="chart-btn">Daily</button>
+									<button id="weeklyBtn" class="chart-btn">Weekly</button>
+									<button id="monthlyBtn" class="chart-btn">Monthly</button>
+								</div>
+								<div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
+									<div class="d-flex align-items-center">
+										<label for="monthSelect" class="me-2 mb-0">Month:</label>
+										<select id="monthSelect" class="form-select form-select-sm"></select>
+									</div>
+
+									<div class="d-flex align-items-center">
+										<label for="yearSelect" class="me-2 mb-0">Year:</label>
+										<select id="yearSelect" class="form-select form-select-sm"></select>
+									</div>
+								</div>
+								<div id="usage_estimate_tenant"></div>
+							</div>
 						</div>
-						<div class="card gauge_card">
-							<p class="card-title">SOIL SENSOR 2</p>
-							<div id="SoilSensor2"></div>
+					<?php else: ?>
+						<div class="status submeter_status">
+							<p>No submeter data available for this room.</p>
 						</div>
-						<div class="card gauge_card">
-							<p class="card-title">HUMIDITY %</p>
-							<div id="humidity"></div>
-						</div>
-						<div class="card gauge_card">
-							<p class="card-title">TEMPERATURE °C</p>
-							<div id="temperature"></div>
+					<?php endif; ?>
+				</div>
+			</ul>
+
+			<div class="class-modal">
+				<div class="modal fade" id="tenantModal" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content">
+							<div class="header"></div>
+							<div class="modal-header">
+								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-user'></i> Add Tenant</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
+							</div>
+							<div class="modal-body">
+								<section class="data-form-modals">
+									<div class="registration">
+										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+											<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+											<div class="col-md-12">
+												<label for="tenant_id" class="form-label">Select Tenant<span> *</span></label>
+												<select class="form-select form-control" name="tenant_id" autocomplete="off" id="tenant_id" required>
+													<option disabled selected value="">Please Select Tenant</option>
+													<?php
+													// Current room ID
+													$current_room_id = $room_id ?? 0;
+
+													// Select active tenants who are NOT assigned to any room (or this room)
+													$stmt = $user->runQuery("
+                                                        SELECT * FROM users u
+                                                        WHERE u.account_status = :account_status
+                                                        AND u.user_type = :user_type
+                                                        AND u.access_key = :access_key
+                                                        AND NOT EXISTS (
+                                                            SELECT 1 FROM rooms r
+                                                            WHERE r.user_id IS NOT NULL
+                                                            AND FIND_IN_SET(u.id, r.user_id) > 0
+                                                        )
+                                                    ");
+
+													$stmt->execute([
+														":account_status" => "active",
+														":user_type" => 2, // tenant
+														":access_key" => $access_key, // tenant
+													]);
+
+													while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
+														$fullname = trim(
+															($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
+																$tenant['first_name'] .
+																($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
+														);
+													?>
+														<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
+													<?php
+													}
+													?>
+												</select>
+												<div class="invalid-feedback">
+													Please select a tenant.
+												</div>
+											</div>
+											<div class="addBtn">
+												<button type="submit" class="btn-dark" name="btn-add-tenant" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
+											</div>
+										</form>
+									</div>
+								</section>
+							</div>
 						</div>
 					</div>
 				</div>
-			</ul>
+			</div>
+
+			<div class="class-modal">
+				<div class="modal fade" id="submeterModal" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content">
+							<div class="header"></div>
+							<div class="modal-header">
+								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-key'></i> Add Submeter</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
+							</div>
+							<div class="modal-body">
+								<section class="data-form-modals">
+									<div class="registration">
+										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+											<div class="row gx-5 needs-validation">
+												<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+												<div class="col-md-12">
+													<label for="submeter_id" class="form-label">Submeter ID<span> *</span></label>
+													<input type="text" class="form-control" autocapitalize="on" autocomplete="off" name="submeter_id" id="submeter_id" required>
+													<div class="invalid-feedback">
+														Please provide a Submeter ID.
+													</div>
+												</div>
+											</div>
+											<div class="addBtn">
+												<button type="submit" class="btn-dark" name="btn-add-submeterId" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
+											</div>
+										</form>
+									</div>
+								</section>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="class-modal">
+				<div class="modal fade" id="addSubTenant" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered modal-lg">
+						<div class="modal-content">
+							<div class="header"></div>
+							<div class="modal-header">
+								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-user-plus'></i> Add SubTenant</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
+							</div>
+							<div class="modal-body">
+								<section class="data-form-modals">
+									<div class="registration">
+										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
+											<div class="row gx-5 needs-validation">
+												<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
+												<input type="hidden" name="tenant_id" value="<?php echo $rooms_user_id; ?>">
+												<?php foreach ($ids as $id): ?>
+													<input type="hidden" name="existing_user_ids[]" value="<?= $id ?>">
+												<?php endforeach; ?>
+
+												<div id="tenant_wrapper" style="padding: 20px;">
+													<div class="tenant_row d-flex mb-2">
+														<select class="form-select form-control me-2" name="sub_tenant_ids[]">
+															<option disabled selected value="">Please Select Tenant</option>
+															<?php
+															// Current room ID
+															$current_room_id = $room_id ?? 0;
+
+															// Select active tenants who are NOT assigned to any room (or this room)
+															$stmt = $user->runQuery("
+                                                            SELECT * FROM users u
+                                                            WHERE u.account_status = :account_status
+                                                            AND u.user_type = :user_type
+                                                            AND u.access_key = :access_key
+                                                            AND NOT EXISTS (
+                                                                SELECT 1 FROM rooms r
+                                                                WHERE r.user_id IS NOT NULL
+                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
+                                                            )
+                                                        ");
+															$stmt->execute([
+																":account_status" => "active",
+																":user_type" => 2, // tenant
+																":access_key" => $access_key, // tenant
+															]);
+
+															while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
+																$fullname = trim(
+																	($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
+																		$tenant['first_name'] .
+																		($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
+																);
+															?>
+																<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
+															<?php
+															}
+															?>
+														</select>
+														<button type="button" class="btn btn-danger remove_tenant">-</button>
+													</div>
+												</div>
+
+												<!-- Hidden Template -->
+												<div id="tenant_template" class="d-none" style="padding: 20px;">
+													<div class="tenant_row d-flex mb-2">
+														<select class="form-select form-control me-2" name="sub_tenant_ids[]">
+															<option disabled selected value="">Please Select Tenant</option>
+															<!-- regenerate same tenant options via PHP -->
+															<?php
+															// Current room ID
+															$current_room_id = $room_id ?? 0;
+
+															// Select active tenants who are NOT assigned to any room (or this room)
+															$stmt = $user->runQuery("
+                                                            SELECT * FROM users u
+                                                            WHERE u.account_status = :account_status
+                                                            AND u.user_type = :user_type
+                                                            AND u.access_key = :access_key
+                                                            AND NOT EXISTS (
+                                                                SELECT 1 FROM rooms r
+                                                                WHERE r.user_id IS NOT NULL
+                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
+                                                            )
+                                                        ");
+
+															$stmt->execute([
+																":account_status" => "active",
+																":user_type" => 2, // tenant
+																":access_key" => $access_key, // tenant
+															]);
+
+															while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
+																$fullname = trim(
+																	($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
+																		$tenant['first_name'] .
+																		($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
+																);
+															?>
+																<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
+															<?php
+															}
+															?>
+														</select>
+														<button type="button" class="btn btn-danger remove_tenant">-</button>
+													</div>
+												</div>
+												<div class="addTenantBtn">
+													<button type="button" class="btn-success" id="add_tenant" onclick="return IsEmpty(); sexEmpty();"><i class='bx bx-user-plus'></i> Add Field</button>
+												</div>
+
+											</div>
+											<div class="addBtn">
+												<button type="submit" class="btn-dark" name="btn-add-tenant" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add Subtenant</button>
+											</div>
+										</form>
+									</div>
+								</section>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</main>
+
+		<div id="chartContainer"
+			data-roomsubmeter-id="<?= $submeter_id ?>">
+		</div>
 		<!-- MAIN -->
 	</section>
 	<!-- CONTENT -->
 
 	<?php echo $footer_dashboard->getFooterDashboard() ?>
 	<?php include_once '../../config/sweetalert.php'; ?>
-	<script src="../../src/js/gauge.js"></script>
-	<!-- <script>
-		function fetchData() {
-			var xhr = new XMLHttpRequest();
-
-			// Monitor when request state changes
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === XMLHttpRequest.DONE) {
-					if (xhr.status === 200) {
-						var data = JSON.parse(xhr.responseText);
-
-						// Update WiFi status
-						const wifiStatusElement = document.getElementById('wifiStatus');
-						if (wifiStatusElement) {
-							wifiStatusElement.textContent = data.wifi_status;
-							// Change color based on WiFi status
-							if (data.wifi_status.toLowerCase() === 'connected') {
-								wifiStatusElement.style.color = 'green';
-							} else if (data.wifi_status.toLowerCase() === 'no device found') {
-								wifiStatusElement.style.color = 'red';
-							} else {
-								wifiStatusElement.style.color = 'black';
-							}
-						} else {
-							console.error("Element 'wifiStatus' not found.");
-						}
-						const pumpStatusElement = document.getElementById('pumpStatus');
-						if (pumpStatusElement) {
-							pumpStatusElement.textContent = data.pumpStatus;
-							// Change color based on pump status
-							if (data.pumpStatus.toLowerCase() === 'on') {
-								pumpStatusElement.style.color = 'green';
-							} else if (data.pumpStatus.toLowerCase() === 'off' || data.pumpStatus.toLowerCase() === 'not connected') {
-								pumpStatusElement.style.color = 'red';
-							} else {
-								pumpStatusElement.style.color = 'black';
-							}
-						} else {
-							console.error("Element 'pumpStatus' not found.");
-						}
-
-						const valve1StatusElement = document.getElementById('valve1Status');
-						if (valve1StatusElement) {
-							valve1StatusElement.textContent = data.valve1Status;
-							// Change color based on valve1 status
-							if (data.valve1Status.toLowerCase() === 'open') {
-								valve1StatusElement.style.color = 'green';
-							} else if (data.valve1Status.toLowerCase() === 'closed' || data.valve1Status.toLowerCase() === 'not connected') {
-								valve1StatusElement.style.color = 'red';
-							} else {
-								valve1StatusElement.style.color = 'black';
-							}
-						} else {
-							console.error("Element 'valve1Status' not found.");
-						}
-
-						const valve2StatusElement = document.getElementById('valve2Status');
-						if (valve2StatusElement) {
-							valve2StatusElement.textContent = data.valve2Status;
-							// Change color based on valve2 status
-							if (data.valve2Status.toLowerCase() === 'open') {
-								valve2StatusElement.style.color = 'green';
-							} else if (data.valve2Status.toLowerCase() === 'closed' || data.valve2Status.toLowerCase() === 'not connected') {
-								valve2StatusElement.style.color = 'red';
-							} else {
-								valve2StatusElement.style.color = 'black';
-							}
-						} else {
-							console.error("Element 'valve2Status' not found.");
-						}
-
-						const soilMoisture1Element = document.getElementById('soilMoisture1');
-						if (soilMoisture1Element) {
-							soilMoisture1Element.textContent = data.soilMoisture1;
-						} else {
-							console.error("Element 'soilMoisture1' not found.");
-						}
-
-						const soilMoisture2Element = document.getElementById('soilMoisture2');
-						if (soilMoisture2Element) {
-							soilMoisture2Element.textContent = data.soilMoisture2;
-						} else {
-							console.error("Element 'soilMoisture2' not found.");
-						}
-						const humidityElement = document.getElementById('humidity');
-						if (humidityElement) {
-							humidityElement.textContent = `${data.humidity} %`;
-						} else {
-							console.error("Element 'humidity' not found.");
-						}
-
-						const temperatureElement = document.getElementById('temperature');
-						if (temperatureElement) {
-							temperatureElement.textContent = `${data.temperature} °C`;
-						} else {
-							console.error("Element 'temperature' not found.");
-						}
-
-
-						// Update Water status
-						const waterStatusElement = document.getElementById('waterStatus');
-						if (waterStatusElement) {
-							waterStatusElement.textContent = data.waterStatus;
-							// Change color based on water status
-							if (data.waterStatus.toLowerCase() === 'water level is normal') {
-								waterStatusElement.style.color = 'green';
-							} else if (data.waterStatus.toLowerCase() === 'water level is low' || data.waterStatus.toLowerCase() === 'not connected' || data.waterStatus.toLowerCase() === 'no water') {
-								waterStatusElement.style.color = 'red';
-							} else {
-								waterStatusElement.style.color = 'black';
-							}
-						} else {
-							console.error("Element 'waterStatus' not found.");
-						}
-
-					} else {
-						console.error("Failed to fetch data. Status: " + xhr.status);
-					}
-				}
-			};
-
-			// Prepare the POST request with optional data (if needed)
-			var postData = JSON.stringify({});
-			xhr.open('POST', 'controller/receive_data.php', true);
-			xhr.setRequestHeader('Content-Type', 'application/json');
-			xhr.send(postData);
-		}
-
-		// Fetch data every 2 seconds
-		setInterval(fetchData, 2000);
-		fetchData(); // Initial fetch
-	</script> -->
+	<script type="module" src="../../src/js/submeter_data.js"></script>
+	<script type="module" src="../../src/js/tenant_energy_usage_graph.js"></script>
+	<script type="module" src="../../src/js/tenant_energy_cost_graph.js"></script>
 </body>
 
 </html>

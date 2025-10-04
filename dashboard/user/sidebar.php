@@ -25,9 +25,9 @@ class SideBar
         return '
         <section id="sidebar">
             <a href="" class="brand">
-                <img src="../../src/img/plant-support-icon.png" alt="logo">
-                <span class="text">PlantSupport<br>
-                    <p>Smart Irrigation</p>
+                <img src="../../src/img/smart-energy-logo.png" alt="logo">
+                <span class="text">WATTZUP<br>
+                    <p>Smart Energy System</p>
                 </span>
             </a>
             <ul class="side-menu top">
@@ -37,20 +37,25 @@ class SideBar
                         <span class="text">Dashboard</span>
                     </a>
                 </li>
-                <li class="' . $this->isActive('thresholds') . '">
-                    <a href="thresholds">
-                        <i class="bx bxs-tachometer"></i>
-                        <span class="text">Thresholds</span>
-                    </a>
-                </li>
+                <li class="' . $this->isActive('smart-switch') . '">
+                <a href="smart-switch">
+                    <i class="bx bxs-toggle-right"></i>
+                    <span class="text">Smart Switch</span>
+                </a>
                 <li class="' . $this->isActive('reports') . '">
                 <a href="reports">
-                    <i class="bx bxs-report"></i>
+                    <i class="bx bx-doughnut-chart"  ></i> 
                     <span class="text">Reports</span>
                 </a>
             </li>
             </ul>
             <ul class="side-menu top">
+                <li class="' . $this->isActive('settings') . '">
+                    <a href="settings">
+                        <i class="bx bxs-cog"></i>
+                        <span class="text">Settings</span>
+                    </a>
+                </li>
                 <li class="' . $this->isActive('audit-trail') . '">
                     <a href="audit-trail">
                         <i class="bx bxl-blogger"></i>

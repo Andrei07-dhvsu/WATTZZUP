@@ -62,6 +62,11 @@ public function mainUrl(){
   return $URL;
 }
 
+public function proxyUrl() {
+   $ServerUrl = new ProxyServerUrl();
+   $ProxyUrl = $ServerUrl->getUrl();
+   return $ProxyUrl;
+}
  public function lasdID()
  {
   $stmt = $this->conn->lastInsertId();
