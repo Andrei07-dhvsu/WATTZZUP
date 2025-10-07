@@ -176,38 +176,6 @@ include_once 'header.php';
     <?php include_once '../../config/sweetalert.php'; ?>
 
     <script>
-        //live search---------------------------------------------------------------------------------------//
-        $(document).ready(function() {
-
-            load_data(1);
-
-            function load_data(page, query = '') {
-                $.ajax({
-                    url: "tables/sensor-logs-table.php",
-                    method: "POST",
-                    data: {
-                        page: page,
-                        query: query
-                    },
-                    success: function(data) {
-                        $('#dynamic_content').html(data);
-                    }
-                });
-            }
-
-            $(document).on('click', '.page-link', function() {
-                var page = $(this).data('page_number');
-                var query = $('#search_box').val();
-                load_data(page, query);
-            });
-
-            $('#search_box').keyup(function() {
-                var query = $('#search_box').val();
-                load_data(1, query);
-            });
-
-        });
-
         async function toggleAppliance(applianceId) {
             const statusElement = document.getElementById(`status-${applianceId}`);
             const button = document.querySelector(`#appliance-${applianceId} .btn-toggle`);
@@ -224,7 +192,7 @@ include_once 'header.php';
 
             // Send update to server (no loading)
             try {
-                await fetch('controller/appliances-controlle.php', {
+                await fetch('controller/appliances-controller.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: applianceId, status: newStatus })
