@@ -2019,6 +2019,31 @@ border-right-color: var(--main);
 }
 
 
+
+.gauge_dashboard .room_status .appliance .btn-toggle {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.gauge_dashboard .room_status .appliance .btn-on {
+    background-color: #28a745;
+    color: white;
+}
+
+.gauge_dashboard .room_status .appliance .btn-off {
+    background-color: #dc3545;
+    color: white;
+}
+
+.gauge_dashboard .room_status .appliance .btn-toggle:hover {
+    opacity: 0.9;
+}
+
+
 /* water anaylzer dashboard */
 .gauge_dashboard .status{
 	margin: 10px;

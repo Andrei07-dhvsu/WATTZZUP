@@ -141,7 +141,7 @@ include_once 'header.php';
 	<script>
 		async function updateTotals() {
 			try {
-				const response = await fetch("controller/receive_data.php"); // fetch data
+				const response = await fetch("controller/submeter_receive_data.php"); // fetch data
 				const data = await response.json();
 
 				let totalKWh = 0;

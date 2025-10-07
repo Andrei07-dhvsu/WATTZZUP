@@ -5,7 +5,7 @@ $timeoutDuration = 60; // 1 minute timeout duration
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Ensure the data directory exists
-    if (!file_exists($dataDir)) {
+    if (!file_exists(filename: $dataDir)) {
         mkdir($dataDir, 0777, true);
     }
 
