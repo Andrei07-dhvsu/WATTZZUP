@@ -1,13 +1,15 @@
 <?php
-include_once 'header.php';
+include_once '../header.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
 	<?php echo $header_dashboard->getHeaderDashboard() ?>
+	<link href='https://fonts.googleapis.com/css?family=Antonio' rel='stylesheet'>
 
-	<title>Audit Trail</title>
+	<title>User Management</title>
 </head>
 
 <body>
@@ -15,10 +17,11 @@ include_once 'header.php';
 	<!-- Loader -->
 	<div class="loader"></div>
 
-
 	<!-- SIDEBAR -->
 	<?php echo $sidebar->getSideBar(); ?> <!-- This will render the sidebar -->
 	<!-- SIDEBAR -->
+
+
 
 	<!-- CONTENT -->
 	<section id="content">
@@ -43,14 +46,14 @@ include_once 'header.php';
 		<main>
 			<div class="head-title">
 				<div class="left">
-					<h1>Audit Trail</h1>
+					<h1>User Management</h1>
 					<ul class="breadcrumb">
 						<li>
 							<a class="active" href="./">Home</a>
 						</li>
 						<li>|</li>
 						<li>
-							<a href="">Audit Trail</a>
+							<a href="">User Management</a>
 						</li>
 					</ul>
 				</div>
@@ -59,18 +62,18 @@ include_once 'header.php';
 			<div class="table-data">
 				<div class="order">
 					<div class="head">
-						<h3><i class='bx bxl-blogger'></i> Audit Trail</h3>
+						<h3><i class='bx bxs-report'></i> List of User's</h3>
 					</div>
-
+					<button type="button" onclick="location.href='archives/users'" class="archives btn-dark"><i class='bx bxs-archive'></i> Archives</button>
 					<!-- BODY -->
 					<section class="data-table">
 						<div class="searchBx">
-							<input type="input" placeholder="Logs . . ." class="search" name="search_box" id="search_box"><button class="searchBtn"><i class="bx bx-search icon"></i></button>
+							<input type="input" placeholder="Search . . ." class="search" name="search_box" id="search_box"><button class="searchBtn"><i class="bx bx-search icon"></i></button>
 						</div>
 
 						<div class="table">
 							<div id="dynamic_content">
-							</div>
+						</div>
 
 					</section>
 				</div>
@@ -82,6 +85,7 @@ include_once 'header.php';
 
 	<?php echo $footer_dashboard->getFooterDashboard() ?>
 	<?php include_once '../../config/sweetalert.php'; ?>
+
 	<script>
 		//live search---------------------------------------------------------------------------------------//
 		$(document).ready(function() {
@@ -90,7 +94,7 @@ include_once 'header.php';
 
 			function load_data(page, query = '') {
 				$.ajax({
-					url: "tables/logs-table.php",
+					url: "tables/user-lists-table.php",
 					method: "POST",
 					data: {
 						page: page,

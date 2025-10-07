@@ -6,15 +6,15 @@ require_once '../authentication/user-class.php';
 $user = new USER();
 if(!$user->isUserLoggedIn())
 {
- $user->redirect('../../../private/user/');
+ $user->redirect('../../../');
 }
 
 // Use the runQuery method to prepare and execute queries.
 function get_total_row($user)
 {
-    $pdoQuery = "SELECT COUNT(*) as total_rows FROM sensor_logs";
+    $pdoQuery = "SELECT COUNT(*) as total_rows FROM energy_alerts WHERE user_id=:user_id";
     $pdoResult = $user->runQuery($pdoQuery);
-    $pdoResult->execute();
+    $pdoResult->execute([':user_id' => $_SESSION['userSession']]);
     $row = $pdoResult->fetch(PDO::FETCH_ASSOC);
     return $row['total_rows'];
 }
@@ -32,7 +32,8 @@ else
     $start = 0;
 }
 
-$query = "SELECT * FROM sensor_logs";
+$query = "SELECT * FROM energy_alerts WHERE user_id=:user_id";
+
 
 $output = '';
 if($_POST['query'] != '') {
@@ -41,9 +42,10 @@ if($_POST['query'] != '') {
     $formatted_date = date("F j, Y", strtotime($search_term)); // Convert the search term to date format
 
     // Modify the query to search by email, activity, or formatted created_at date
-    $query .= ' WHERE sensor LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR status LIKE "%'.str_replace(' ', '%', $search_term).'%" 
-                OR DATE_FORMAT(sensor_logs.created_at, "%M %e, %Y") LIKE "%'.str_replace(' ', '%', $formatted_date).'%"';
+    $query .= ' AND kwh_limit LIKE "%'.str_replace(' ', '%', $search_term).'%"
+                OR alert_date LIKE "%'.str_replace(' ', '%', $search_term).'%"
+                OR DATE_FORMAT(logs.created_at, "%M %e, %Y") LIKE "%'.str_replace(' ', '%', $formatted_date).'%"';
+                
 }
 
 $query .= ' ORDER BY id DESC ';
@@ -52,12 +54,12 @@ $filter_query = $query . ' LIMIT '.$start.', '.$limit.'';
 
 // Use the runQuery method to prepare and execute the query.
 $statement = $user->runQuery($query);
-$statement->execute();
+$statement->execute([':user_id' => $_SESSION['userSession']]);
 $total_data = $statement->rowCount();
 
 // Use the runQuery method to prepare and execute the filtered query.
 $statement = $user->runQuery($filter_query);
-$statement->execute();
+$statement->execute([':user_id' => $_SESSION['userSession']]);
 $total_filter_data = $statement->rowCount();
 
 if($total_data > 0)
@@ -68,29 +70,40 @@ if($total_data > 0)
         </div>
         <thead>
             <th>#</th>
-            <th>SENSOR</th>
-            <th>STATUS</th>
-            <th>LOG DATE</th>
+            <th>ROOM NAME</th>
+            <th>SUBMETER ID</th>
+            <th>USER</th>
+            <th>EMAIL</th>
+            <th>ALERT DATE</th>
         </thead>
     ';
 
     while($row = $statement->fetch(PDO::FETCH_ASSOC))
     {
+            $user_id = $row["user_id"];
+            $pdoQuery = "SELECT * FROM users WHERE id = :id";
+            $pdoResult = $user->runQuery($pdoQuery);
+            $pdoResult->execute(array(":id" => $user_id));
+            $user_data = $pdoResult->fetch(PDO::FETCH_ASSOC);
+
+            $room_id = $row["room_id"];
+            $pdoQuery = "SELECT * FROM rooms WHERE id = :id";
+            $roomDetails = $user->runQuery($pdoQuery);
+            $roomDetails->execute(array(":id" => $room_id));
+            $room_data = $roomDetails->fetch(PDO::FETCH_ASSOC);
 
         $output .= '
         <tr>
-            <td>'.$row["id"].'</td>
-            <td>'.$row["sensor"].'</td>
-            <td>'.$row["status"].'</td>
-            <td>'.date("F j, Y (h:i A)", strtotime($row['created_at'])).'</td>
-            </tr>
-        ';
+            <td>' . $row["id"] . '</td>
+            <td>' . $room_data["room_number"] . '</td>
+            <td>' . $row["submeter_id"] . '</td>
+            <td>' . $user_data["last_name"] . ', ' . $user_data["first_name"] . ' ' . $user_data["middle_name"] . '</td>            <td>' . $user_data["email"] . '</td>
+            <td>' . date("F j, Y (h:i A)", strtotime($row['created_at'])) . '</td>
+        </tr>';
+        }
+    } else {
+        $output .= '<h1 class="no_room">No data found</h1>';
     }
-}
-else
-{
-    echo '<h1>No data found</h1>';
-}
 
 $output .= '</table>';
 $output .= '<div align="center"><ul class="pagination">';

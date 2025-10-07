@@ -224,7 +224,7 @@ include_once 'header.php';
 
             // Send update to server (no loading)
             try {
-                await fetch('controller/appliances-controller.php', {
+                await fetch('controller/appliances-controlle.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: applianceId, status: newStatus })

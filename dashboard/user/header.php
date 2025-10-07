@@ -87,7 +87,7 @@ $rooms_user_email        = $data['email'] ?? '';
 
 // ✅ Assign room data
 $room_id           = $data['room_id'] ?? '';
-$room_owner_id	 	= $data['owner_id'];	
+$room_owner_id	 	= $data['owner_id'] ?? '';	
 $room_number       = $data['room_number'] ?? '';
 $submeter_id       = $data['submeter_id'] ?? '';
 $kwh_limit         = $data['kwh_limit'] ?? '';

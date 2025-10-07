@@ -38,7 +38,7 @@ class SideBar
                     </a>
                 </li>
                 <li class="' . $this->isActive('smart-switch') . '">
-                <a href="">
+                <a href="smart-switch">
                     <i class="bx bxs-toggle-right"></i>
                     <span class="text">Smart Switch</span>
                 </a>
@@ -50,6 +50,12 @@ class SideBar
             </li>
             </ul>
             <ul class="side-menu top">
+                <li class="' . $this->isActive('audit-trail') . '">
+                    <a href="audit-trail">
+                        <i class="bx bxl-blogger"></i>
+                        <span class="text">Audit Trail</span>
+                    </a>
+                </li>
                 <li>
                     <a href="authentication/user-signout" class="btn-signout">
                         <i class="bx bxs-log-out-circle"></i>

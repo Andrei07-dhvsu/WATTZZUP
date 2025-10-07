@@ -64,7 +64,6 @@ include_once 'header.php';
 					<div class="head">
 						<h3><i class='bx bxs-report'></i> List of User's</h3>
 					</div>
-					<button type="button" onclick="location.href='archives/users'" class="archives btn-dark"><i class='bx bxs-archive'></i> Archives</button>
 					<!-- BODY -->
 					<section class="data-table">
 						<div class="searchBx">
