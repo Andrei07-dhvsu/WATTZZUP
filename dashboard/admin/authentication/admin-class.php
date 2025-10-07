@@ -210,7 +210,7 @@ public function proxyUrl() {
   $mail->SetFrom($smtp_email, $system_name);
   $mail->Subject    = $subject;
   $mail->MsgHTML($message);
-  $imagePath = __DIR__ . '/../../../src/img/plant-support-logo.png';
+  $imagePath = __DIR__ . '/../../../src/img/wattzup-high-resolution-logo-transparent.png';
   $mail->AddEmbeddedImage($imagePath, 'logo', 'logo.png');
   $mail->Send();
  } 
