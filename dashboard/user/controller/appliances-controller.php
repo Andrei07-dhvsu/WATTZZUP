@@ -1,4 +1,8 @@
 <?php
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include_once '../../../config/settings-configuration.php';
 include_once __DIR__ . '/../../../database/dbconfig.php';
 require_once '../authentication/user-class.php';
@@ -108,6 +112,33 @@ class Appliances
         }
     }
 
+    public function deleteAppliance($appliance_id)
+    {
+        $stmt = $this->user->runQuery("
+            DELETE FROM appliances WHERE id = :id
+        ");
+        $exec = $stmt->execute([
+            ":id" => $appliance_id
+        ]);
+
+        if ($exec) {
+            $this->user->logs("Deleted appliance ID $appliance_id", $_SESSION['userSession']);
+
+            $_SESSION['status_title'] = 'Success!';
+            $_SESSION['status'] = 'Appliance successfully deleted.';
+            $_SESSION['status_code'] = 'success';
+            $_SESSION['status_timer'] = 4000;
+        } else {
+            $_SESSION['status_title'] = 'Error!';
+            $_SESSION['status'] = 'Failed to delete appliance.';
+            $_SESSION['status_code'] = 'error';
+            $_SESSION['status_timer'] = 4000;
+        }
+
+        header('Location: ../smart-switch');
+        exit;
+    }
+
     public function runQuery($sql)
     {
         $stmt = $this->conn->prepare($sql);
@@ -129,6 +160,12 @@ if (isset($_POST['btn-add-appliances'])) {
 
     $applianceData = new Appliances();
     $applianceData->addAppliance($appliance_name, $switch_id, $status, $user_id, $room_id);
+}
+
+if (isset($_GET['delete_appliance'])){
+    $appliance_id = $_GET['id'];
+    $applianceData = new Appliances();
+    $applianceData->deleteAppliance($appliance_id);
 }
 
 # 🟡 Toggle Appliance (AJAX via fetch)

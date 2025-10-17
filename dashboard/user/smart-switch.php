@@ -75,6 +75,9 @@ include_once 'header.php';
                                 extract($appliance_data);
                         ?>
                                 <div class="card2 arduino appliance" id="appliance-<?php echo $appliance_data['id']; ?>">
+                                    <div class="delete-icon">
+                                        <a href="controller/appliances-controller.php?id=<?php echo $appliance_data['id'] ?>&delete_appliance" class="delete"><i class='bx bxs-trash icon-2'></i></a>
+                                    </div>
                                     <h1><?php echo htmlspecialchars($appliance_data['appliance_name']); ?></h1>
 
                                     <div class="sensor-data">
@@ -194,15 +197,19 @@ include_once 'header.php';
             try {
                 await fetch('controller/appliances-controller.php', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: applianceId, status: newStatus })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: applianceId,
+                        status: newStatus
+                    })
                 });
             } catch (err) {
                 console.error('Error updating status:', err);
             }
         }
-
-</script>
+    </script>
 </body>
 
 </html>
