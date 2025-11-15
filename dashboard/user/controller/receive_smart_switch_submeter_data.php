@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../authentication/user-class.php';
-
+$user = new USER();
 $proxyURL = $user->proxyUrl();
 
 $proxyServerUrl = "https://enersense.space/smart-switch-data.php"; // Replace with your proxy server URL
@@ -25,3 +25,5 @@ if ($response !== false) {
     error_log("Failed to fetch data from proxy server.");
 }
 
+
+?>
