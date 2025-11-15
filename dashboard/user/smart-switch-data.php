@@ -1,5 +1,15 @@
 <?php
 include_once 'header.php';
+
+$switchID = $_GET['id'] ?? '';   // ✅ fixed
+
+// Fetch room data
+$stmt = $user->runQuery("SELECT * FROM appliances WHERE id=:uid");
+$stmt->execute([':uid' => $switchID]);
+$switch_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$submeter_id = $switch_data['submeter_id'] ?? '';
+
 ?>
 
 <!DOCTYPE html>
@@ -45,6 +55,10 @@ include_once 'header.php';
 					<ul class="breadcrumb">
 						<li>
 							<a class="active" href="./">Home</a>
+						</li>
+						<li>|</li>
+						<li>
+							<a class="active" href="smart-switch">Smart Switch</a>
 						</li>
 						<li>|</li>
 						<li>
@@ -135,233 +149,6 @@ include_once 'header.php';
 					<?php endif; ?>
 				</div>
 			</ul>
-
-			<div class="class-modal">
-				<div class="modal fade" id="tenantModal" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
-					<div class="modal-dialog modal-dialog-centered modal-lg">
-						<div class="modal-content">
-							<div class="header"></div>
-							<div class="modal-header">
-								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-user'></i> Add Tenant</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
-							</div>
-							<div class="modal-body">
-								<section class="data-form-modals">
-									<div class="registration">
-										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
-											<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
-											<div class="col-md-12">
-												<label for="tenant_id" class="form-label">Select Tenant<span> *</span></label>
-												<select class="form-select form-control" name="tenant_id" autocomplete="off" id="tenant_id" required>
-													<option disabled selected value="">Please Select Tenant</option>
-													<?php
-													// Current room ID
-													$current_room_id = $room_id ?? 0;
-
-													// Select active tenants who are NOT assigned to any room (or this room)
-													$stmt = $user->runQuery("
-                                                        SELECT * FROM users u
-                                                        WHERE u.account_status = :account_status
-                                                        AND u.user_type = :user_type
-                                                        AND u.access_key = :access_key
-                                                        AND NOT EXISTS (
-                                                            SELECT 1 FROM rooms r
-                                                            WHERE r.user_id IS NOT NULL
-                                                            AND FIND_IN_SET(u.id, r.user_id) > 0
-                                                        )
-                                                    ");
-
-													$stmt->execute([
-														":account_status" => "active",
-														":user_type" => 2, // tenant
-														":access_key" => $access_key, // tenant
-													]);
-
-													while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
-														$fullname = trim(
-															($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
-																$tenant['first_name'] .
-																($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
-														);
-													?>
-														<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
-													<?php
-													}
-													?>
-												</select>
-												<div class="invalid-feedback">
-													Please select a tenant.
-												</div>
-											</div>
-											<div class="addBtn">
-												<button type="submit" class="btn-dark" name="btn-add-tenant" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
-											</div>
-										</form>
-									</div>
-								</section>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="class-modal">
-				<div class="modal fade" id="submeterModal" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
-					<div class="modal-dialog modal-dialog-centered modal-lg">
-						<div class="modal-content">
-							<div class="header"></div>
-							<div class="modal-header">
-								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-key'></i> Add Submeter</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
-							</div>
-							<div class="modal-body">
-								<section class="data-form-modals">
-									<div class="registration">
-										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
-											<div class="row gx-5 needs-validation">
-												<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
-												<div class="col-md-12">
-													<label for="submeter_id" class="form-label">Submeter ID<span> *</span></label>
-													<input type="text" class="form-control" autocapitalize="on" autocomplete="off" name="submeter_id" id="submeter_id" required>
-													<div class="invalid-feedback">
-														Please provide a Submeter ID.
-													</div>
-												</div>
-											</div>
-											<div class="addBtn">
-												<button type="submit" class="btn-dark" name="btn-add-submeterId" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
-											</div>
-										</form>
-									</div>
-								</section>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="class-modal">
-				<div class="modal fade" id="addSubTenant" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
-					<div class="modal-dialog modal-dialog-centered modal-lg">
-						<div class="modal-content">
-							<div class="header"></div>
-							<div class="modal-header">
-								<h5 class="modal-title" id="classModalLabel"><i class='bx bxs-user-plus'></i> Add SubTenant</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="closeButton"></button>
-							</div>
-							<div class="modal-body">
-								<section class="data-form-modals">
-									<div class="registration">
-										<form action="controller/room-controller.php" method="POST" class="row gx-5 needs-validation" name="form" onsubmit="return validate()" novalidate style="overflow: hidden;">
-											<div class="row gx-5 needs-validation">
-												<input type="hidden" name="room_id" value="<?php echo $room_id; ?>">
-												<input type="hidden" name="tenant_id" value="<?php echo $rooms_user_id; ?>">
-												<?php foreach ($ids as $id): ?>
-													<input type="hidden" name="existing_user_ids[]" value="<?= $id ?>">
-												<?php endforeach; ?>
-
-												<div id="tenant_wrapper" style="padding: 20px;">
-													<div class="tenant_row d-flex mb-2">
-														<select class="form-select form-control me-2" name="sub_tenant_ids[]">
-															<option disabled selected value="">Please Select Tenant</option>
-															<?php
-															// Current room ID
-															$current_room_id = $room_id ?? 0;
-
-															// Select active tenants who are NOT assigned to any room (or this room)
-															$stmt = $user->runQuery("
-                                                            SELECT * FROM users u
-                                                            WHERE u.account_status = :account_status
-                                                            AND u.user_type = :user_type
-                                                            AND u.access_key = :access_key
-                                                            AND NOT EXISTS (
-                                                                SELECT 1 FROM rooms r
-                                                                WHERE r.user_id IS NOT NULL
-                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
-                                                            )
-                                                        ");
-															$stmt->execute([
-																":account_status" => "active",
-																":user_type" => 2, // tenant
-																":access_key" => $access_key, // tenant
-															]);
-
-															while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
-																$fullname = trim(
-																	($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
-																		$tenant['first_name'] .
-																		($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
-																);
-															?>
-																<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
-															<?php
-															}
-															?>
-														</select>
-														<button type="button" class="btn btn-danger remove_tenant">-</button>
-													</div>
-												</div>
-
-												<!-- Hidden Template -->
-												<div id="tenant_template" class="d-none" style="padding: 20px;">
-													<div class="tenant_row d-flex mb-2">
-														<select class="form-select form-control me-2" name="sub_tenant_ids[]">
-															<option disabled selected value="">Please Select Tenant</option>
-															<!-- regenerate same tenant options via PHP -->
-															<?php
-															// Current room ID
-															$current_room_id = $room_id ?? 0;
-
-															// Select active tenants who are NOT assigned to any room (or this room)
-															$stmt = $user->runQuery("
-                                                            SELECT * FROM users u
-                                                            WHERE u.account_status = :account_status
-                                                            AND u.user_type = :user_type
-                                                            AND u.access_key = :access_key
-                                                            AND NOT EXISTS (
-                                                                SELECT 1 FROM rooms r
-                                                                WHERE r.user_id IS NOT NULL
-                                                                AND FIND_IN_SET(u.id, r.user_id) > 0
-                                                            )
-                                                        ");
-
-															$stmt->execute([
-																":account_status" => "active",
-																":user_type" => 2, // tenant
-																":access_key" => $access_key, // tenant
-															]);
-
-															while ($tenant = $stmt->fetch(PDO::FETCH_ASSOC)) {
-																$fullname = trim(
-																	($tenant['last_name'] ? $tenant['last_name'] . ', ' : '') .
-																		$tenant['first_name'] .
-																		($tenant['middle_name'] ? ' ' . $tenant['middle_name'] : '')
-																);
-															?>
-																<option value="<?= $tenant['id'] ?>"><?= $fullname ?></option>
-															<?php
-															}
-															?>
-														</select>
-														<button type="button" class="btn btn-danger remove_tenant">-</button>
-													</div>
-												</div>
-												<div class="addTenantBtn">
-													<button type="button" class="btn-success" id="add_tenant" onclick="return IsEmpty(); sexEmpty();"><i class='bx bx-user-plus'></i> Add Field</button>
-												</div>
-
-											</div>
-											<div class="addBtn">
-												<button type="submit" class="btn-dark" name="btn-add-tenant" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add Subtenant</button>
-											</div>
-										</form>
-									</div>
-								</section>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		</main>
 
 		<div id="chartContainer"
@@ -373,9 +160,9 @@ include_once 'header.php';
 
 	<?php echo $footer_dashboard->getFooterDashboard() ?>
 	<?php include_once '../../config/sweetalert.php'; ?>
-	<script type="module" src="../../src/js/submeter_data.js"></script>
-	<script type="module" src="../../src/js/tenant_energy_usage_graph.js"></script>
-	<script type="module" src="../../src/js/tenant_energy_cost_graph.js"></script>
+	<script type="module" src="../../src/js/smart_switch_submeter_data.js"></script>
+	<script type="module" src="../../src/js/each_tenant_energy_usage_graph.js"></script>
+	<script type="module" src="../../src/js/each_tenant_energy_cost_graph.js"></script>
 </body>
 
 </html>

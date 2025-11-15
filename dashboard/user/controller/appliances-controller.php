@@ -21,12 +21,12 @@ class Appliances
     }
 
     // 🔹 Add new appliance
-    public function addAppliance($appliance_name, $switch_id, $status, $user_id, $room_id)
+    public function addAppliance($appliance_name, $switch_id, $submeter_id, $status, $user_id, $room_id)
     {
         // 1️⃣ Check if the switch_id is already used
         $checkSwitch = $this->user->runQuery('
-            SELECT * FROM appliances WHERE switch_id = :switch_id
-        ');
+        SELECT * FROM appliances WHERE switch_id = :switch_id
+    ');
         $checkSwitch->execute([":switch_id" => $switch_id]);
 
         if ($checkSwitch->rowCount() > 0) {
@@ -38,13 +38,28 @@ class Appliances
             exit;
         }
 
-        // 2️⃣ Check duplicate appliance name
+        // 2️⃣ Check if submeter_id already exists (1:1 relationship)
+        $checkSubmeter = $this->user->runQuery('
+        SELECT * FROM appliances WHERE submeter_id = :submeter_id
+    ');
+        $checkSubmeter->execute([":submeter_id" => $submeter_id]);
+
+        if ($checkSubmeter->rowCount() > 0) {
+            $_SESSION['status_title'] = 'Oops!';
+            $_SESSION['status'] = 'This submeter is already linked to another appliance.';
+            $_SESSION['status_code'] = 'info';
+            $_SESSION['status_timer'] = 4000;
+            header('Location: ../smart-switch');
+            exit;
+        }
+
+        // 3️⃣ Check duplicate appliance name in same room
         $checkDuplicate = $this->user->runQuery('
-            SELECT * FROM appliances 
-            WHERE appliance_name = :appliance_name 
-            AND room_id = :room_id 
-            AND user_id = :user_id
-        ');
+        SELECT * FROM appliances 
+        WHERE appliance_name = :appliance_name 
+        AND room_id = :room_id 
+        AND user_id = :user_id
+    ');
         $checkDuplicate->execute([
             ":appliance_name" => $appliance_name,
             ":room_id"        => $room_id,
@@ -60,21 +75,22 @@ class Appliances
             exit;
         }
 
-        // 3️⃣ Insert new appliance
+        // 4️⃣ Insert new appliance
         $insert = $this->user->runQuery('
-            INSERT INTO appliances (appliance_name, switch_id, status, user_id, room_id)
-            VALUES (:appliance_name, :switch_id, :status, :user_id, :room_id)
-        ');
+        INSERT INTO appliances (appliance_name, switch_id, submeter_id, status, user_id, room_id)
+        VALUES (:appliance_name, :switch_id, :submeter_id, :status, :user_id, :room_id)
+    ');
         $exec = $insert->execute([
             ":appliance_name" => $appliance_name,
             ":switch_id"      => $switch_id,
+            ":submeter_id"    => $submeter_id,
             ":status"         => $status,
             ":user_id"        => $user_id,
             ":room_id"        => $room_id
         ]);
 
         if ($exec) {
-            $activity = "Added new appliance: $appliance_name (Switch ID: $switch_id)";
+            $activity = "Added new appliance: $appliance_name (Switch ID: $switch_id, Submeter ID: $submeter_id)";
             $this->user->logs($activity, $user_id);
 
             $_SESSION['status_title'] = 'Success!';
@@ -154,15 +170,16 @@ class Appliances
 if (isset($_POST['btn-add-appliances'])) {
     $appliance_name = trim($_POST['appliance_name']);
     $switch_id      = trim($_POST['switch_id']);
+    $submeter_id    = trim($_POST['submeter_id']);
     $status         = "OFF";
     $user_id        = trim($_POST['user_id']);
     $room_id        = trim($_POST['room_id']);
 
     $applianceData = new Appliances();
-    $applianceData->addAppliance($appliance_name, $switch_id, $status, $user_id, $room_id);
+    $applianceData->addAppliance($appliance_name, $switch_id, $submeter_id, $status, $user_id, $room_id);
 }
 
-if (isset($_GET['delete_appliance'])){
+if (isset($_GET['delete_appliance'])) {
     $appliance_id = $_GET['id'];
     $applianceData = new Appliances();
     $applianceData->deleteAppliance($appliance_id);

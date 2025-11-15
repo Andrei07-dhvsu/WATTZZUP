@@ -78,8 +78,9 @@ include_once 'header.php';
                                     <div class="delete-icon">
                                         <a href="controller/appliances-controller.php?id=<?php echo $appliance_data['id'] ?>&delete_appliance" class="delete"><i class='bx bxs-trash icon-2'></i></a>
                                     </div>
-                                    <h1><?php echo htmlspecialchars($appliance_data['appliance_name']); ?></h1>
-
+                                    <h1 onclick="window.location.href='smart-switch-data?id=<?php echo $appliance_data['id']; ?>'" style="cursor: pointer;">
+                                        <?php echo htmlspecialchars($appliance_data['appliance_name']); ?>
+                                    </h1>
                                     <div class="sensor-data">
                                         <span class="tenant_name">
                                             Switch ID: <?php echo htmlspecialchars($appliance_data['switch_id']); ?>
@@ -155,6 +156,14 @@ include_once 'header.php';
                                                     <input type="text" class="form-control" autocapitalize="on" autocomplete="off" name="switch_id" id="switch_id" required>
                                                     <div class="invalid-feedback">
                                                         Please provide a Switch ID
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-12">
+                                                    <label for="submeter_id" class="form-label">Submeter ID<span> *</span></label>
+                                                    <input type="text" class="form-control" autocapitalize="on" autocomplete="off" name="submeter_id" id="submeter_id" required>
+                                                    <div class="invalid-feedback">
+                                                        Please provide a Submeter ID
                                                     </div>
                                                 </div>
                                             </div>

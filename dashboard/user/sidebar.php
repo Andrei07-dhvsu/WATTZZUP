@@ -37,7 +37,7 @@ class SideBar
                         <span class="text">Dashboard</span>
                     </a>
                 </li>
-                <li class="' . $this->isActive('smart-switch') . '">
+                                <li class="' . ($this->currentPage === 'smart-switch' || $this->currentPage === 'smart-switch-data' ? 'active' : '') . '">
                 <a href="smart-switch">
                     <i class="bx bxs-toggle-right"></i>
                     <span class="text">Smart Switch</span>
