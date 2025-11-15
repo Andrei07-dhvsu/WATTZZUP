@@ -4,41 +4,74 @@ $dataDir = 'switch_data/';
 $timeoutDuration = 60; // 1 minute timeout duration
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     // Ensure the data directory exists
     if (!file_exists($dataDir)) {
         mkdir($dataDir, 0777, true);
     }
 
-    // Receive data from switch
+    // Receive JSON from ESP
     $data = file_get_contents('php://input');
     $switchData = json_decode($data, true);
 
-    // Check for switchId in the data
+    // Must include switchId
     if (isset($switchData['switchId'])) {
+
         $deviceId = $switchData['switchId'];
         $dataFile = $dataDir . $deviceId . '.json';
-        $switchData['timestamp'] = time(); // Add/update timestamp
-        file_put_contents($dataFile, json_encode($switchData));
+
+        // Add timestamp
+        $switchData['timestamp'] = time();
+
+        // Detect load state from the current reading
+        if (isset($switchData['current'])) {
+            if ($switchData['current'] > 0) {
+                $switchData['deviceLoadStatus'] = "CONNECTED"; // may load
+            } else {
+                $switchData['deviceLoadStatus'] = "NONE"; // walang load
+            }
+        }
+
+        // Save JSON file per device
+        file_put_contents($dataFile, json_encode($switchData, JSON_PRETTY_PRINT));
+
         echo 'switch Data received';
     } else {
         echo 'switchId missing';
     }
+
 } else {
-    // Serve the latest data for all switchs
+
+    // Serve latest data for ALL devices
     $allData = [];
     foreach (glob($dataDir . '*.json') as $filename) {
+
         $deviceData = json_decode(file_get_contents($filename), true);
+
         $currentTime = time();
         $dataAge = $currentTime - ($deviceData['timestamp'] ?? 0);
 
         if ($dataAge <= $timeoutDuration) {
-            // Device is online — return actual data
+
+            // Device online
             $allData[] = $deviceData;
+
         } else {
-            // Device is offline — return zeros, including switchId and timestamp set to 0
+
+            // Device offline -> return default values
             $allData[] = [
-                'wifi_status' => 'No device found',
-                'switchId' => 0,
+                'wifi_status' => 'OFFLINE',
+                'switchId' => basename($filename, ".json"),
+                'state' => 'OFF',
+                'voltage' => 0,
+                'current' => 0,
+                'power' => 0,
+                'energyWh' => 0,
+                'energyKWh' => 0,
+                'frequency' => 0,
+                'powerFactor' => 0,
+                'deviceLoadStatus' => 'NONE',
+                'timestamp' => 0
             ];
         }
     }
