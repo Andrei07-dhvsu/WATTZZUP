@@ -69,9 +69,9 @@ include_once 'header.php';
                                 <img src="../../src/img/<?php echo $user_profile ?>" alt="logo">
 
                                 <a href="controller/profile-controller.php?id=<?php echo $user_id ?>&delete_avatar=1" class="delete"><i class='bx bxs-trash'></i></a>
-                                <button class="btn-dark change" onclick="edit()"><i class='bx bxs-edit'></i> Edit Profile</button>
-                                <button class="btn-dark change" onclick="avatar()"><i class='bx bxs-user'></i> Change Avatar</button>
-                                <button class="btn-dark change" onclick="password()"><i class='bx bxs-key'></i> Change Password</button>
+                                <button class="btn-primary change" onclick="edit()"><i class='bx bxs-edit'></i> Edit Profile</button>
+                                <button class="btn-primary change" onclick="avatar()"><i class='bx bxs-user'></i> Change Avatar</button>
+                                <button class="btn-primary change" onclick="password()"><i class='bx bxs-key'></i> Change Password</button>
 
                             </div>
 
@@ -194,7 +194,7 @@ include_once 'header.php';
                                     </div>
 
                                     <div class="addBtn">
-                                        <button type="submit" class="btn-dark" name="btn-update-avatar" onclick="return IsEmpty(); sexEmpty();">Update</button>
+                                        <button type="submit" class="btn-primary" name="btn-update-avatar" onclick="return IsEmpty(); sexEmpty();">Update</button>
                                     </div>
                                 </form>
                             </div>
@@ -234,7 +234,7 @@ include_once 'header.php';
                                     </div>
 
                                     <div class="addBtn">
-                                        <button type="submit" class="btn-dark" name="btn-update-password" onclick="return IsEmpty(); sexEmpty();">Update</button>
+                                        <button type="submit" class="btn-primary" name="btn-update-password" onclick="return IsEmpty(); sexEmpty();">Update</button>
                                     </div>
                                 </form>
                             </div>

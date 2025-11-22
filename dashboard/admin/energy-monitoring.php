@@ -58,7 +58,7 @@ include_once 'header.php';
 			</div>
 
 			<div class="modal-button">
-				<button type="button" data-bs-toggle="modal" data-bs-target="#roomsModal" class="btn-dark"><i class='bx bxs-plus-circle'></i> Add Room's</button>
+				<button type="button" data-bs-toggle="modal" data-bs-target="#roomsModal" class="btn-primary"><i class='bx bxs-plus-circle'></i> Add Room's</button>
 			</div>
 
 			<ul class="dashboard_data">
@@ -94,7 +94,7 @@ include_once 'header.php';
 										</span>
 									</div>
 									<div class="more-info">
-										<button type="button" onclick="setSessionValues(<?php echo $rooms_data['id']; ?>)" class="btn-dark">More Info <i class='bx bx-right-arrow-alt'></i></button>
+										<button type="button" onclick="setSessionValues(<?php echo $rooms_data['id']; ?>)" class="btn-primary">More Info <i class='bx bx-right-arrow-alt'></i></button>
 									</div>
 								</div>
 							<?php
@@ -135,7 +135,7 @@ include_once 'header.php';
 
 											</div>
 											<div class="addBtn">
-												<button type="submit" class="btn-dark" name="btn-add-room" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
+												<button type="submit" class="btn-primary" name="btn-add-room" id="btn-add" onclick="return IsEmpty(); sexEmpty();">Add</button>
 											</div>
 										</form>
 									</div>

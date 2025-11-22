@@ -66,7 +66,7 @@ $footer_signin = new FooterSignin();
                                     </div>
                                 </div>
                                 <div class="form-group m-0">
-                                    <button type="submit" id="submit" class="btn btn-dark btn-block" name="btn-signup">
+                                    <button type="submit" id="submit" class="btn btn-primary btn-block" name="btn-signup">
                                         Sign Up
                                     </button>
                                 </div>

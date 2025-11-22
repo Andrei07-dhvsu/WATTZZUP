@@ -59,7 +59,7 @@ include_once 'header.php';
             </div>
 
             <div class="modal-button">
-                <button type="button" data-bs-toggle="modal" data-bs-target="#appliancesModal" class="btn-dark"><i class='bx bxs-plus-circle'></i> Add Appliances</button>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#appliancesModal" class="btn-primary"><i class='bx bxs-plus-circle'></i> Add Appliances</button>
             </div>
 
             <ul class="dashboard_data">
@@ -168,7 +168,7 @@ include_once 'header.php';
                                                 </div>
                                             </div>
                                             <div class="addBtn">
-                                                <button type="submit" class="btn-dark" name="btn-add-appliances" onclick="return IsEmpty(); sexEmpty();">Add</button>
+                                                <button type="submit" class="btn-primary" name="btn-add-appliances" onclick="return IsEmpty(); sexEmpty();">Add</button>
                                             </div>
                                         </form>
                                     </div>

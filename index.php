@@ -52,7 +52,7 @@ $footer_signin = new FooterSignin();
 								</div>
 
 								<div class="form-group m-0">
-									<button type="submit"  id="submit" class="btn btn-dark btn-block" name="btn-signin">
+									<button type="submit"  id="submit" class="btn btn-primary btn-block" name="btn-signin">
 										Sign In
 									</button>
 								</div>

@@ -19,7 +19,7 @@
          });
          $this.after($("<div/>", {
              html: 'Show',
-             class: 'btn btn-dark btn-sm',
+             class: 'btn btn-primary btn-sm',
              id: 'passeye-toggle-'+i,
          }).css({
                  position: 'absolute',

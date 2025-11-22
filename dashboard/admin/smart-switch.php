@@ -59,7 +59,7 @@ include_once 'header.php';
 
 			</div>
 			<div class="modal-button">
-				<button type="button" data-bs-toggle="modal" data-bs-target="#plantsModal" class="btn-dark"><i class='bx bxs-plus-circle'></i> Add User's</button>
+				<button type="button" data-bs-toggle="modal" data-bs-target="#plantsModal" class="btn-primary"><i class='bx bxs-plus-circle'></i> Add User's</button>
 			</div>
 
 			<div class="table-data">
@@ -67,7 +67,7 @@ include_once 'header.php';
 					<div class="head">
 						<h3><i class='bx bxs-report'></i> List of User's</h3>
 					</div>
-					<button type="button" onclick="location.href='archives/users'" class="archives btn-dark"><i class='bx bxs-archive'></i> Archives</button>
+					<button type="button" onclick="location.href='archives/users'" class="archives btn-primary"><i class='bx bxs-archive'></i> Archives</button>
 					<!-- BODY -->
 					<section class="data-table">
 						<div class="searchBx">
