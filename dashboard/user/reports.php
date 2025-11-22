@@ -61,7 +61,7 @@ include_once 'header.php';
 			<div class="table-data">
 				<div class="order">
 					<div class="head">
-						<h3><i class='bx bxs-report'></i> Smart Irrigation Reports</h3>
+						<h3><i class='bx bxs-report'></i> Smart Switch Reports</h3>
 					</div>
 
 					<!-- BODY -->
