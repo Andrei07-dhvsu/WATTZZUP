@@ -1,56 +1,46 @@
 <?php
 header('Content-Type: application/json');
 
-// Allow only POST requests
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(["error" => "Only POST requests are allowed"]);
-    exit;
-}
+// Path to store latest readings
+$logFile = 'device_readings.json';
 
-// Get raw POST data
-$json = file_get_contents('php://input');
-
-if (!$json) {
-    http_response_code(400);
-    echo json_encode(["error" => "No JSON received"]);
+// Read raw POST data
+$rawData = file_get_contents("php://input");
+if (!$rawData) {
+    echo json_encode(["status" => "error", "message" => "No data received"]);
     exit;
 }
 
 // Decode JSON
-$data = json_decode($json, true);
-
-if (json_last_error() !== JSON_ERROR_NONE) {
-    http_response_code(400);
-    echo json_encode(["error" => "Invalid JSON"]);
+$data = json_decode($rawData, true);
+if (!$data || !isset($data['device_id']) || !isset($data['BPM'])) {
+    echo json_encode(["status" => "error", "message" => "Invalid JSON format"]);
     exit;
 }
 
-// Validate required fields
-if (!isset($data['device_id']) || !isset($data['BPM'])) {
-    http_response_code(400);
-    echo json_encode(["error" => "Missing device_id or BPM"]);
-    exit;
+// Load existing readings if file exists
+$readings = [];
+if (file_exists($logFile)) {
+    $json = file_get_contents($logFile);
+    $readings = json_decode($json, true);
+    if (!is_array($readings)) $readings = [];
 }
 
-// Extract data
-$device_id = $data['device_id'];
-$bpm       = $data['BPM'];
-$timestamp = date("Y-m-d H:i:s");
+// Update reading for this device
+$deviceId = $data['device_id'];
+$readings[$deviceId] = [
+    "BPM" => $data['BPM'],
+    "timestamp" => date("Y-m-d H:i:s")
+];
 
-// Optional: store data in a CSV file (or use a database)
-$file = 'bpm_data.csv';
-$entry = [$timestamp, $device_id, $bpm];
-$fp = fopen($file, 'a');
-fputcsv($fp, $entry);
-fclose($fp);
+// Save updated readings back to file
+file_put_contents($logFile, json_encode($readings, JSON_PRETTY_PRINT));
 
-// Respond back to device
-http_response_code(200);
+// Return success
 echo json_encode([
     "status" => "success",
-    "message" => "BPM received",
-    "device_id" => $device_id,
-    "BPM" => $bpm
+    "message" => "Data received",
+    "device_id" => $deviceId,
+    "BPM" => $data['BPM']
 ]);
 ?>
