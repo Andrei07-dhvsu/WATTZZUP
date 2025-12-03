@@ -72,37 +72,37 @@ $submeter_id = $switch_data['submeter_id'] ?? '';
 				<div class="gauge_dashboard">
 					<?php if ($submeter_id): ?>
 						<div class="status">
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>⚡ Total Voltage</h1>
 								<div class="sensor-data">
 									<span id="voltage">Loading....</span>
 								</div>
 							</div>
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>🔌 Total Current</h1>
 								<div class="sensor-data">
 									<span id="current">Loading....</span>
 								</div>
 							</div>
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>🔌 Total Power</h1>
 								<div class="sensor-data">
 									<span id="power">Loading....</span>
 								</div>
 							</div>
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>🔋 Total Energy Consumption</h1>
 								<div class="sensor-data">
 									<span id="energyKWh">Loading....</span>
 								</div>
 							</div>
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>🎵 Total Frequency</h1>
 								<div class="sensor-data">
 									<span id="frequency">Loading....</span>
 								</div>
 							</div>
-							<div class="card arduino">
+							<div class="card arduino" style="background-color: #f2f7ffff;">
 								<h1>📐 Total Power Factor</h1>
 								<div class="sensor-data">
 									<span id="powerFactor">Loading....</span>
@@ -110,7 +110,7 @@ $submeter_id = $switch_data['submeter_id'] ?? '';
 							</div>
 						</div>
 						<div class="gauge">
-							<div class="card gauge_card">
+							<div class="card gauge_card"  style="background-color: #f2f7ffff;">
 								<div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
 									<div class="d-flex align-items-center">
 										<label for="yearSelectCost" class="me-2 mb-0">Year:</label>
@@ -121,7 +121,7 @@ $submeter_id = $switch_data['submeter_id'] ?? '';
 								<p class="card-title">Energy Cost Graph</p>
 								<div id="S1"></div>
 							</div>
-							<div class="card gauge_card">
+							<div class="card gauge_card" style="background-color: #f2f7ffff;" >
 								<p class="card-title">Usage Estimate</p>
 								<div class="d-flex align-items-center gap-2 mb-3" style="margin-top: 20px;">
 									<button id="dailyBtn" class="chart-btn">Daily</button>

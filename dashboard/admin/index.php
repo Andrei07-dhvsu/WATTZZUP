@@ -44,7 +44,7 @@ include_once 'header.php';
 		<main>
 			<div class="head-title">
 				<div class="left">
-					<h1>Dashboard</h1>
+					<h1>Admin Dashboard</h1>
 					<ul class="breadcrumb">
 						<li>
 							<a class="active" href="./">Home</a>
